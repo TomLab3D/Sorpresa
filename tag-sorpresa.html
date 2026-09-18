@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hai trovato qualcosa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #2b22e0;
+    --bg-deep: #1c14b0;
+    --butter: #ffe873;
+    --lilac: #cfcaff;
+    --ring: rgba(255, 232, 115, 0.42);
+    --btn-text: #1c14b0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1d16a8;
+      --bg-deep: #120c78;
+      --butter: #ffe873;
+      --lilac: #bdb7ff;
+      --ring: rgba(255, 232, 115, 0.36);
+      --btn-text: #120c78;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1d16a8;
+    --bg-deep: #120c78;
+    --butter: #ffe873;
+    --lilac: #bdb7ff;
+    --ring: rgba(255, 232, 115, 0.36);
+    --btn-text: #120c78;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--butter);
+    font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    position: relative;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: max(9vh, 2.5rem) 7vw max(5vh, 1.75rem);
+    background: radial-gradient(120% 70% at 50% 110%, var(--bg-deep) 0%, var(--bg) 70%);
+  }
+
+  /* Le onde partono dal punto in cui il telefono ha toccato il tag */
+  .waves {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .ring {
+    position: absolute;
+    left: 0; top: 0;
+    width: 30vmax;
+    height: 30vmax;
+    margin: -15vmax 0 0 -15vmax;
+    border: 2px solid var(--ring);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.05);
+    animation: ripple 7s cubic-bezier(.15,.5,.3,1) infinite;
+  }
+  .ring:nth-child(2) { animation-delay: 1.2s; }
+  .ring:nth-child(3) { animation-delay: 2.4s; }
+  .ring:nth-child(4) { animation-delay: 3.6s; }
+  .ring:nth-child(5) { animation-delay: 4.8s; }
+  .ring:nth-child(6) { animation-delay: 6s; }
+  .ring.burst {
+    animation: ripple 2.2s cubic-bezier(.1,.6,.3,1) 1 forwards;
+    border-width: 3px;
+    border-color: var(--butter);
+  }
+  @keyframes ripple {
+    0%   { opacity: 0.9; transform: scale(0.05); }
+    100% { opacity: 0;   transform: scale(2.6); }
+  }
+
+  .top, .bottom { position: relative; z-index: 1; }
+
+  .line {
+    display: block;
+    clip-path: inset(-0.25em 100% -0.25em -0.05em);
+    transition: clip-path 1s cubic-bezier(.2,.75,.1,1);
+  }
+  .line.in { clip-path: inset(-0.25em -0.25em -0.25em -0.25em); }
+
+  .hello {
+    font-size: clamp(3.4rem, 17vw, 7rem);
+    font-weight: 800;
+    font-variation-settings: "opsz" 96;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+  }
+  .verdict {
+    margin-top: 1.1rem;
+    font-size: clamp(1.6rem, 6.6vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    color: var(--lilac);
+  }
+  .message {
+    margin-top: 1.6rem;
+    max-width: 30ch;
+    font-size: clamp(1.05rem, 4.4vw, 1.3rem);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--butter);
+  }
+
+  .timeline {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.35;
+    max-width: 28ch;
+    color: var(--lilac);
+  }
+  .count-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-top: 0.4rem;
+  }
+  .count {
+    font-size: clamp(6.5rem, 34vw, 13rem);
+    font-weight: 800;
+    font-variation-settings: "opsz" 96;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+  .count-label {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--lilac);
+  }
+
+  .again {
+    margin-top: 1.4rem;
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--btn-text);
+    background: var(--butter);
+    padding: 0.95rem 1.6rem;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity .6s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .again.in { opacity: 1; }
+  .again:active { transform: scale(0.94); }
+  .again:focus-visible { outline: 3px solid var(--lilac); outline-offset: 3px; }
+
+  @media (min-width: 720px) {
+    .stage { padding-left: 9vw; padding-right: 9vw; }
+    .message { max-width: 36ch; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ring { animation: none; opacity: 0.35; transform: scale(1); }
+    .ring:nth-child(n+3) { display: none; }
+    .line { clip-path: none; transition: none; }
+    .again { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <div class="waves" aria-hidden="true">
+      <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+      <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+    </div>
+
+    <section class="top">
+      <h1 class="line hello" id="hello"></h1>
+      <p class="line verdict" id="verdict"></p>
+      <p class="line message" id="message"></p>
+    </section>
+
+    <section class="bottom">
+      <p class="line timeline" id="timeline"></p>
+      <div class="line count-wrap" id="countWrap">
+        <span class="count" id="count">1</span>
+        <span class="count-label" id="countLabel">tocco finora</span>
+      </div>
+      <button class="again" id="again" type="button">Toccami ancora</button>
+    </section>
+  </main>
+
+<script>
+(function () {
+  // ---- Personalizzazione via link: ?n=Giulia&m=Il tuo messaggio ----
+  var params = new URLSearchParams(window.location.search);
+  var name = (params.get("n") || "").trim().slice(0, 24);
+  var custom = (params.get("m") || "").trim().slice(0, 220);
+
+  // ---- Contatore scansioni (per telefono/browser) ----
+  var KEY = "tag-sorpresa-count";
+  var count = 1;
+  var countWorks = false;
+
+  try {
+    var prev = parseInt(localStorage.getItem(KEY) || "0", 10);
+    count = (isNaN(prev) ? 0 : prev) + 1;
+    localStorage.setItem(KEY, String(count));
+    countWorks = localStorage.getItem(KEY) === String(count);
+  } catch (e) { countWorks = false; }
+
+  if (!countWorks) {
+    // Piano B: cookie (dura un anno)
+    try {
+      var m = document.cookie.match(new RegExp("(?:^|; )" + KEY + "=(\\d+)"));
+      var prevC = m ? parseInt(m[1], 10) : 0;
+      count = prevC + 1;
+      document.cookie = KEY + "=" + count + "; max-age=31536000; path=/; SameSite=Lax";
+      countWorks = document.cookie.indexOf(KEY + "=" + count) !== -1;
+    } catch (e) { countWorks = false; }
+  }
+
+  // Se il browser non permette di ricordare nulla, meglio non mostrare un numero finto
+  if (!countWorks) count = 1;
+
+  var now = new Date();
+  var h = now.getHours();
+  var mm = String(now.getMinutes()).padStart(2, "0");
+
+  // ---- Testi ----
+  var hello = name ? "Ciao " + name + "." : "Ehi, tu.";
+
+  var verdict;
+  if (count === 1) verdict = "Hai trovato il segreto.";
+  else if (count === 2) verdict = "Di nuovo qui. Mi piace.";
+  else if (count === 3) verdict = "Ti stai affezionando, eh?";
+  else if (count <= 6) verdict = "Ormai è una tradizione.";
+  else verdict = "A questo punto vivi qui.";
+
+  var message = custom ||
+    "Un'intera pagina, nascosta dentro un adesivo. Non te l'aspettavi, vero?";
+
+  var timeline;
+  if (h < 5) timeline = "Sono le " + h + ":" + mm + ". Non dovresti dormire?";
+  else if (h < 11) timeline = "Buongiorno. Iniziare con un piccolo mistero fa bene.";
+  else if (h < 14) timeline = "Bel modo di passare la pausa.";
+  else if (h < 18) timeline = "Pomeriggio noioso? Non più.";
+  else if (h < 23) timeline = "Buonasera. Serata da scoprire.";
+  else timeline = "È tardi, ma resta ancora un attimo.";
+
+  function $(id) { return document.getElementById(id); }
+  $("hello").textContent = hello;
+  $("verdict").textContent = verdict;
+  $("message").textContent = message;
+  $("timeline").textContent = timeline;
+  $("count").textContent = String(count);
+  $("countLabel").textContent = count === 1 ? "tocco finora" : "tocchi finora";
+  if (!countWorks) $("countWrap").style.display = "none";
+
+  // ---- Sequenza di rivelazione ----
+  var steps = [
+    ["hello", 500],
+    ["verdict", 1500],
+    ["message", 2700],
+    ["timeline", 4300],
+    ["countWrap", 5100],
+    ["again", 6000]
+  ];
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  steps.forEach(function (s) {
+    var el = $(s[0]);
+    if (reduce) { el.classList.add("in"); return; }
+    setTimeout(function () { el.classList.add("in"); }, s[1]);
+  });
+
+  // ---- Suono e onda al tocco ----
+  var audioCtx = null;
+  function chime() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      var t0 = audioCtx.currentTime;
+      [659.25, 987.77, 1318.51].forEach(function (f, i) {
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = f;
+        var t = t0 + i * 0.11;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t + 1.3);
+      });
+    } catch (e) { /* audio non disponibile */ }
+  }
+
+  function burst() {
+    var waves = document.querySelector(".waves");
+    var r = document.createElement("span");
+    r.className = "ring burst";
+    r.addEventListener("animationend", function () { r.remove(); });
+    waves.appendChild(r);
+  }
+
+  $("again").addEventListener("click", function () {
+    burst();
+    chime();
+    try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
