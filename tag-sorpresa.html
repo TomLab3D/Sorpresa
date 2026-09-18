@@ -271,9 +271,27 @@
   $("verdict").textContent = verdict;
   $("message").textContent = message;
   $("timeline").textContent = timeline;
-  $("count").textContent = String(count);
-  $("countLabel").textContent = count === 1 ? "tocco finora" : "tocchi finora";
-  if (!countWorks) $("countWrap").style.display = "none";
+  // Il numero grande conta i tocchi sul pulsante (in memoria, e salvati se il browser lo permette)
+  var TAPKEY = "tag-sorpresa-taps";
+  var taps = 0;
+  try {
+    var t0 = parseInt(localStorage.getItem(TAPKEY) || "0", 10);
+    taps = isNaN(t0) ? 0 : t0;
+  } catch (e) {
+    try {
+      var tm = document.cookie.match(new RegExp("(?:^|; )" + TAPKEY + "=(\\d+)"));
+      taps = tm ? parseInt(tm[1], 10) : 0;
+    } catch (e2) { taps = 0; }
+  }
+  function showTaps() {
+    $("count").textContent = String(taps);
+    $("countLabel").textContent = taps === 1 ? "tocco finora" : "tocchi finora";
+  }
+  function saveTaps() {
+    try { localStorage.setItem(TAPKEY, String(taps)); return; } catch (e) {}
+    try { document.cookie = TAPKEY + "=" + taps + "; max-age=31536000; path=/; SameSite=Lax"; } catch (e2) {}
+  }
+  showTaps();
 
   // Diagnostica: apri il link con ?debug=1 per vedere cosa permette il browser
   if (params.get("debug")) {
@@ -335,6 +353,13 @@
   }
 
   $("again").addEventListener("click", function () {
+    taps += 1;
+    showTaps();
+    saveTaps();
+    var c = $("count");
+    c.classList.remove("pop");
+    void c.offsetWidth;
+    c.classList.add("pop");
     burst();
     chime();
     try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
