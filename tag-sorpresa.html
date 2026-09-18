@@ -275,6 +275,17 @@
   $("countLabel").textContent = count === 1 ? "tocco finora" : "tocchi finora";
   if (!countWorks) $("countWrap").style.display = "none";
 
+  // Diagnostica: apri il link con ?debug=1 per vedere cosa permette il browser
+  if (params.get("debug")) {
+    var ls = "sì", ck = "sì", saved = "-";
+    try { saved = localStorage.getItem(KEY); localStorage.setItem("t", "1"); } catch (e) { ls = "no"; }
+    try { document.cookie = "t=1; path=/"; if (document.cookie.indexOf("t=1") === -1) ck = "no"; } catch (e) { ck = "no"; }
+    var d = document.createElement("pre");
+    d.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:9;margin:0;padding:8px 12px;font:12px/1.4 monospace;background:#000;color:#0f0;white-space:pre-wrap";
+    d.textContent = "memoria: " + ls + " | cookie: " + ck + " | salvato: " + saved + " | conteggio: " + count + " | funziona: " + countWorks;
+    document.body.appendChild(d);
+  }
+
   // ---- Sequenza di rivelazione ----
   var steps = [
     ["hello", 500],
