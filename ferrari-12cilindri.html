@@ -201,6 +201,14 @@
   }
   .sw[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink); }
 
+  .chip.windbtn { border-color: var(--red); color: var(--red); }
+  .chip.windbtn[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+  .wind { margin: 0.3rem 0 0.2rem; padding: 0.55rem 0.8rem; border: 1.5px solid var(--ink); border-radius: 12px; display: grid; gap: 0.45rem; font-size: 0.82rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; font-weight: 600; }
+  .dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.35rem; vertical-align: -1px; }
+  .wind label { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; }
+  .wind input[type="range"] { flex: 1; accent-color: var(--red); }
+  .wind output { min-width: 5.2ch; text-align: right; font-variant-numeric: tabular-nums; }
   .tip { min-height: 1.2em; font-size: 0.82rem; font-weight: 500; color: var(--ink-soft); margin: 0.2rem 0 0.4rem; }
   .credit { font-size: 0.74rem; color: var(--ink-soft); margin-bottom: 0.45rem; line-height: 1.35; }
   .credit a { color: inherit; }
@@ -335,11 +343,21 @@
   </div>
   <div class="ctrl off" id="views" role="group" aria-label="Punti di vista">
     <span class="lbl">Vista</span>
+    <button class="chip windbtn" type="button" id="windBtn" aria-pressed="false">Galleria del vento</button>
     <button class="chip" type="button" data-view="tq" aria-pressed="false">3/4</button>
     <button class="chip" type="button" data-view="lato" aria-pressed="false">Lato</button>
     <button class="chip" type="button" data-view="sopra" aria-pressed="false">Sopra</button>
     <button class="chip" type="button" data-view="fronte" aria-pressed="false">Fronte</button>
     <button class="chip" type="button" data-view="dietro" aria-pressed="false">Dietro</button>
+  </div>
+
+  <div class="wind" id="windPanel" hidden>
+    <div class="legend">
+      <span><i class="dot" style="background:#e5322d"></i>Aria compressa</span>
+      <span><i class="dot" style="background:#1a96ff"></i>Aria veloce</span>
+      <span><i class="dot" style="background:#9aa3b2"></i>Turbolenza</span>
+    </div>
+    <label for="windSpeed">Vento <input type="range" id="windSpeed" min="60" max="300" step="10" value="120"><output id="windOut" for="windSpeed">120 km/h</output></label>
   </div>
 
   <p class="tip" id="tip"></p>
@@ -522,9 +540,10 @@
   //  Camera orbitale
   // ---------------------------------------------------------------
   var HOME = { x: 0, y: 0.6, z: 0 };
+  var tunnel = { on: false };
   var cam = { yaw: 0.7, pitch: 0.25, dist: 14, tx: HOME.x, ty: HOME.y, tz: HOME.z };
   var goal = { yaw: 0.7, pitch: 0.25, dist: 14, tx: HOME.x, ty: HOME.y, tz: HOME.z };
-  var cinematic = true, finished = false, curView = null, idleSince = 0, userActive = false;
+  var cinematic = true, finished = false, curView = null, idleSince = 0, userActive = false, locked = false;
   var VIEWS = {
     tq:     { yaw: 0.7,  pitch: 0.25, sw: 5.2, sh: 2.4 },
     lato:   { yaw: 0,    pitch: 0.03, sw: 5.4, sh: 1.6 },
@@ -551,7 +570,10 @@
   }
   $("views").addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("button") : null;
-    if (b && finished) goView(b.getAttribute("data-view"));
+    if (!b || !finished) return;
+    if (b.id === "windBtn") { if (tunnel.on) tunnelOff(true); else tunnelOn(); return; }
+    if (tunnel.on) tunnelOff(false);
+    goView(b.getAttribute("data-view"));
   });
 
   function resize() {
@@ -570,6 +592,7 @@
   var pts = {}, pinch = 0;
   function touched() { cinematic = false; userActive = true; curView = null; markView(); goal.yaw = cam.yaw; goal.pitch = cam.pitch; goal.dist = cam.dist; }
   cv.addEventListener("pointerdown", function (e) {
+    if (locked) return;
     pts[e.pointerId] = { x: e.clientX, y: e.clientY };
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}
     var ks = Object.keys(pts);
@@ -577,6 +600,7 @@
     touched();
   });
   cv.addEventListener("pointermove", function (e) {
+    if (locked) return;
     var p = pts[e.pointerId]; if (!p) return;
     var ks = Object.keys(pts);
     if (ks.length >= 2) {
@@ -599,11 +623,11 @@
   cv.addEventListener("pointerup", up);
   cv.addEventListener("pointercancel", up);
   cv.addEventListener("wheel", function (e) {
-    e.preventDefault(); touched();
+    e.preventDefault(); if (locked) return; touched();
     cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0012), 1.6, 20); goal.dist = cam.dist;
     userActive = false; idleSince = performance.now() / 1000;
   }, { passive: false });
-  cv.addEventListener("dblclick", function () { if (finished) goView("tq"); });
+  cv.addEventListener("dblclick", function () { if (finished && !locked) goView("tq"); });
 
   // ---------------------------------------------------------------
   //  Caricamento del modello
@@ -702,7 +726,7 @@
       pv.position.copy(root.worldToLocal(ctrW.clone()));
       root.add(pv); root.updateMatrixWorld(true);
       list.forEach(function (m) { pv.attach(m); });
-      s.pv = pv; s.home = pv.position.clone(); s.center = ctrW; s.size = Math.max(size.x, size.y, size.z);
+      s.pv = pv; s.home = pv.position.clone(); s.center = ctrW; s.size3 = size.clone(); s.size = Math.max(size.x, size.y, size.z);
       s.landed = false; s.focused = false;
     });
     seq[N - 1].landed = false; seq[N - 1].focused = false;
@@ -812,7 +836,8 @@
       if (allLanded && !finished && glossStart && now - glossStart > 1.6) finish();
     }
 
-    if (finished && !cinematic && !userActive && now - idleSince > 4.5 && !reduce) goal.yaw += dt * 0.3;
+    if (tunnel.on) tunnelStep(dt, now);
+    if (finished && !cinematic && !userActive && !locked && now - idleSince > 4.5 && !reduce) goal.yaw += dt * 0.3;
     var kk = 1 - Math.exp(-dt * (cinematic ? 2.2 : 6));
     cam.yaw += angDiff(cam.yaw, goal.yaw) * kk; cam.pitch += (goal.pitch - cam.pitch) * kk; cam.dist += (goal.dist - cam.dist) * kk;
     cam.tx += (goal.tx - cam.tx) * kk; cam.ty += (goal.ty - cam.ty) * kk; cam.tz += (goal.tz - cam.tz) * kk;
@@ -830,8 +855,214 @@
   $("again").addEventListener("click", function () {
     if (!ready) return;
     unlockAudio(); if (!sheet.hidden) btn.click();
+    if (tunnel.on) tunnelOff(false);
     play();
   });
+
+
+  // ---------------------------------------------------------------
+  //  Galleria del vento: l'auto sta ferma e l'aria le scorre intorno
+  //  (simulazione a scopo dimostrativo, non un calcolo aerodinamico reale)
+  // ---------------------------------------------------------------
+  var TN = 420, TK = 44;
+  var tun = { prof: null, wheels: [], px: null, py: null, pz: null, hp: null, hc: null, ha: null, geo: null, pts: null, floor: null, floorTex: null,
+              U: 3.4, spin: 0, seeded: false };
+  var ptop = 0, pwid = 0;
+  function smoothstep(a, b, x) { var u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }
+
+  function buildProfile() {
+    var meshes = [];
+    ["paint", "glass", "carbon", "trim", "lights"].forEach(function (g) { (groups[g] || []).forEach(function (m) { meshes.push(m); }); });
+    carRoot.updateMatrixWorld(true);
+    var rc = new THREE.Raycaster(), n = 48, x0 = -2.5, x1 = 2.5, top = [], wd = [], i;
+    var org = new THREE.Vector3(), dDown = new THREE.Vector3(0, -1, 0), dNeg = new THREE.Vector3(0, 0, -1), dPos = new THREE.Vector3(0, 0, 1);
+    for (i = 0; i <= n; i++) {
+      var x = x0 + (x1 - x0) * i / n, tp = 0, w = 0;
+      [0, 0.3, -0.3].forEach(function (zz) {
+        rc.set(org.set(x, 3, zz), dDown);
+        var h = rc.intersectObjects(meshes, false);
+        if (h.length) tp = Math.max(tp, h[0].point.y);
+      });
+      if (tp > 0.3) {
+        var yc = tp * 0.5 + 0.06;
+        rc.set(org.set(x, yc, 3), dNeg);
+        var a = rc.intersectObjects(meshes, false); if (a.length) w = Math.max(w, Math.abs(a[0].point.z));
+        rc.set(org.set(x, yc, -3), dPos);
+        var b = rc.intersectObjects(meshes, false); if (b.length) w = Math.max(w, Math.abs(b[0].point.z));
+      }
+      top.push(tp); wd.push(w);
+    }
+    var lo = -1, hi = -1;
+    for (i = 0; i <= n; i++) if (top[i] > 0.3 && wd[i] > 0.25) { if (lo < 0) lo = i; hi = i; }
+    if (lo < 0) return null;
+    for (i = lo; i <= hi; i++) { if (top[i] < 0.3) top[i] = top[i - 1]; if (wd[i] < 0.25) wd[i] = wd[i - 1]; }
+    var step = (x1 - x0) / n;
+    return { x0: x0, step: step, top: top, w: wd, lo: lo, hi: hi, n: n, xmin: x0 + lo * step, xmax: x0 + hi * step };
+  }
+  function profAt(x) {
+    var P = tun.prof, f = (clamp(x, P.xmin, P.xmax) - P.x0) / P.step;
+    var i0 = Math.floor(f), i1 = Math.min(P.hi, i0 + 1), u = f - i0;
+    ptop = P.top[i0] + (P.top[i1] - P.top[i0]) * u;
+    pwid = P.w[i0] + (P.w[i1] - P.w[i0]) * u;
+  }
+  function sdf(x, y, z) {
+    var P = tun.prof;
+    profAt(x);
+    var cx = clamp(x, P.xmin, P.xmax), dx = x - cx;
+    var bot = 0.1, yc = (ptop + bot) * 0.5, hh = Math.max(0.06, (ptop - bot) * 0.5), w = Math.max(0.2, pwid);
+    var ey = (y - yc) / hh, ez = z / w, e = Math.sqrt(ey * ey + ez * ez);
+    var d = (e - 1) * Math.min(hh, w);
+    if (dx !== 0) { var dp = Math.max(d, 0); d = Math.sqrt(dp * dp + dx * dx); }
+    var W = tun.wheels;
+    for (var k = 0; k < W.length; k++) {
+      var wh = W[k], r = Math.sqrt((x - wh.x) * (x - wh.x) + (y - wh.y) * (y - wh.y)) - wh.r, dz = Math.abs(z - wh.z) - wh.hw;
+      var ar = Math.max(r, 0), az = Math.max(dz, 0);
+      var dc = Math.sqrt(ar * ar + az * az) + Math.min(Math.max(r, dz), 0);
+      if (dc < d) d = dc;
+    }
+    return d;
+  }
+  var gN = { x: 0, y: 0, z: 0 };
+  function grad(x, y, z, d0) {
+    var h = 0.02;
+    var gx = sdf(x + h, y, z) - d0, gy = sdf(x, y + h, z) - d0, gz = sdf(x, y, z + h) - d0;
+    var l = Math.sqrt(gx * gx + gy * gy + gz * gz) || 1;
+    gN.x = gx / l; gN.y = gy / l; gN.z = gz / l;
+  }
+  function ramp(r, wake, out, o) {
+    // rosso = aria compressa, azzurro = aria veloce, grigio = turbolenza
+    var R, G, B;
+    if (wake > 0.25) { R = 154; G = 163; B = 178; }
+    else {
+      var u = clamp((r - 0.35) / 1.05, 0, 1);
+      if (u < 0.5) { var a = u / 0.5; R = 229 + (140 - 229) * a; G = 50 + (170 - 50) * a; B = 45 + (215 - 45) * a; }
+      else { var b = (u - 0.5) / 0.5; R = 140 + (26 - 140) * b; G = 170 + (150 - 170) * b; B = 215 + (255 - 215) * b; }
+    }
+    out[o] = R / 255; out[o + 1] = G / 255; out[o + 2] = B / 255;
+  }
+  function seed(i, anywhere) {
+    tun.px[i] = anywhere ? -4.6 + Math.random() * 9.2 : 4.6;
+    tun.py[i] = 0.05 + Math.pow(Math.random(), 1.4) * 1.95;
+    tun.pz[i] = (Math.random() - 0.5) * 3.6;
+    for (var j = 0; j < TK; j++) {
+      var q = (i * TK + j) * 3;
+      tun.hp[q] = tun.px[i]; tun.hp[q + 1] = tun.py[i]; tun.hp[q + 2] = tun.pz[i];
+      tun.hc[q] = 0.55; tun.hc[q + 1] = 0.67; tun.hc[q + 2] = 0.85;
+    }
+  }
+  function initTunnel() {
+    tun.prof = buildProfile();
+    if (!tun.prof) return false;
+    tun.wheels = [];
+    [seq[2], seq[3]].forEach(function (s) {
+      var sz = s.size3, hw = 0.15;
+      [1, -1].forEach(function (sg) { tun.wheels.push({ x: s.center.x, y: s.center.y, z: sg * (sz.z / 2 - hw), r: sz.y / 2, hw: hw }); });
+    });
+    tun.px = new Float32Array(TN); tun.py = new Float32Array(TN); tun.pz = new Float32Array(TN);
+    tun.hp = new Float32Array(TN * TK * 3); tun.hc = new Float32Array(TN * TK * 3); tun.ha = new Float32Array(TN * TK);
+    for (var i = 0; i < TN; i++) { seed(i, true); for (var j = 0; j < TK; j++) tun.ha[i * TK + j] = Math.pow(1 - j / TK, 1.6) * 0.95; }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(tun.hp, 3));
+    geo.setAttribute("aColor", new THREE.BufferAttribute(tun.hc, 3));
+    geo.setAttribute("alpha", new THREE.BufferAttribute(tun.ha, 1));
+    var mat = new THREE.ShaderMaterial({
+      uniforms: { size: { value: 3.0 * Math.min(window.devicePixelRatio || 1, 2) } },
+      vertexShader: "attribute vec3 aColor; attribute float alpha; uniform float size; varying vec3 vC; varying float vA; void main(){ vC = aColor; vA = alpha; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = size; }",
+      fragmentShader: "varying vec3 vC; varying float vA; void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; gl_FragColor = vec4(vC, vA * (1.0 - d * 1.4)); }",
+      transparent: true, depthWrite: false
+    });
+    tun.pts = new THREE.Points(geo, mat); tun.pts.frustumCulled = false; tun.pts.renderOrder = 5; tun.pts.visible = false;
+    scene.add(tun.pts); tun.geo = geo;
+
+    // nastro sotto le ruote, con strisce che scorrono insieme all'aria
+    var fc = document.createElement("canvas"); fc.width = 128; fc.height = 16;
+    var fx = fc.getContext("2d"); fx.fillStyle = "rgba(20,30,50,0.30)"; fx.fillRect(0, 0, 64, 16);
+    tun.floorTex = new THREE.CanvasTexture(fc); tun.floorTex.wrapS = tun.floorTex.wrapT = THREE.RepeatWrapping; tun.floorTex.repeat.set(24, 1);
+    tun.floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 3.4), new THREE.MeshBasicMaterial({ map: tun.floorTex, transparent: true, depthWrite: false }));
+    tun.floor.rotation.x = -Math.PI / 2; tun.floor.position.y = 0.003; tun.floor.renderOrder = -2; tun.floor.visible = false;
+    scene.add(tun.floor);
+    return true;
+  }
+
+  function tunnelStep(dt, t) {
+    var U = tun.U, P = tun.prof, i, j;
+    var nsub = clamp(Math.ceil(U * dt / 0.02), 1, 8), h = dt / nsub;
+    for (i = 0; i < TN; i++) {
+      var x = tun.px[i], y = tun.py[i], z = tun.pz[i], respawn = false;
+      for (var sub = 0; sub < nsub && !respawn; sub++) {
+        var d = sdf(x, y, z), vx = -U, vy = 0, vz = 0, ratio = 1, wake = 0;
+        if (d < 0.75) {
+          grad(x, y, z, d);
+          var s = smoothstep(0.75, 0.0, d), vn = vx * gN.x + vy * gN.y + vz * gN.z;
+          if (vn < 0) { vx -= gN.x * vn * s; vy -= gN.y * vn * s; vz -= gN.z * vn * s; }
+          var front = smoothstep(0.25, 0.9, gN.x);
+          ratio = 1 - 0.78 * front * s + 0.42 * s * Math.max(0, gN.y) + 0.3 * s * Math.abs(gN.z);
+          vx *= ratio; vy *= ratio; vz *= ratio;
+        }
+        if (y < 0.25) { var gf = 0.8 + 0.2 * (y / 0.25); vx *= gf; ratio *= gf; }
+        var behind = P.xmin - x;
+        if (behind > 0) {
+          profAt(P.xmin);
+          wake = smoothstep(0, 0.35, behind) * (1 - smoothstep(1.4, 3.4, behind)) * (1 - smoothstep(pwid + 0.3, pwid + 1.1, Math.abs(z))) * (1 - smoothstep(ptop + 0.2, ptop + 0.8, y));
+          if (wake > 0) {
+            vy += Math.sin(t * 4.2 + z * 5 + i) * 0.9 * wake * U * 0.3;
+            vz += Math.cos(t * 3.4 + y * 6 + i * 1.7) * 0.9 * wake * U * 0.3;
+            vx *= 1 - 0.5 * wake; ratio *= 1 - 0.4 * wake;
+          }
+        }
+        x += vx * h; y += vy * h; z += vz * h;
+        var d2 = sdf(x, y, z);
+        if (d2 < 0.012) { grad(x, y, z, d2); var pu = 0.012 - d2; x += gN.x * pu; y += gN.y * pu; z += gN.z * pu; }
+        if (y < 0.03) y = 0.03;
+        if (x < -4.7 || Math.abs(z) > 2.2 || y > 2.6) { respawn = true; break; }
+        var bI = i * TK * 3;
+        tun.hp.copyWithin(bI + 3, bI, bI + (TK - 1) * 3);
+        tun.hc.copyWithin(bI + 3, bI, bI + (TK - 1) * 3);
+        tun.hp[bI] = x; tun.hp[bI + 1] = y; tun.hp[bI + 2] = z;
+        ramp(ratio, wake, tun.hc, bI);
+      }
+      if (respawn) seed(i, false); else { tun.px[i] = x; tun.py[i] = y; tun.pz[i] = z; }
+    }
+    tun.geo.attributes.position.needsUpdate = true;
+    tun.geo.attributes.aColor.needsUpdate = true;
+
+    tun.floorTex.offset.x += U * dt / (12 / 24);
+    tun.spin -= U * dt / 0.36;
+    [seq[2], seq[3]].forEach(function (s) {
+      if (!s.pv) return;
+      eul.set(0, 0, tun.spin); qCar.setFromEuler(eul);
+      s.pv.quaternion.copy(qInv).multiply(qCar).multiply(qRoot);
+    });
+  }
+
+  function windSpeed() { tun.U = 1.2 + (+$("windSpeed").value) * 0.018; }
+  $("windSpeed").addEventListener("input", function () { $("windOut").textContent = $("windSpeed").value + " km/h"; windSpeed(); });
+
+  function tunnelOn() {
+    if (!ready || !finished || tunnel.on) return;
+    if (!tun.prof && !initTunnel()) return;
+    windSpeed();
+    tunnel.on = true; locked = true; cinematic = false; curView = null; markView();
+    var b = $("windBtn"); b.setAttribute("aria-pressed", "true"); b.textContent = "Ferma il vento";
+    goal.yaw = cam.yaw + angDiff(cam.yaw, Math.PI); goal.pitch = 0.05; goal.dist = fit(5.8, 2.0);
+    goal.tx = 0; goal.ty = 0.75; goal.tz = 0;
+    tun.pts.visible = true; tun.floor.visible = true;
+    $("windPanel").hidden = false;
+    $("tip").textContent = "La macchina è ferma nella galleria: l'aria arriva da davanti e le scorre intorno.";
+    resize();
+  }
+  function tunnelOff(keepView) {
+    if (!tunnel.on) return;
+    tunnel.on = false; locked = false;
+    var b = $("windBtn"); b.setAttribute("aria-pressed", "false"); b.textContent = "Galleria del vento";
+    if (tun.pts) tun.pts.visible = false;
+    if (tun.floor) tun.floor.visible = false;
+    $("windPanel").hidden = true;
+    [seq[2], seq[3]].forEach(function (s) { if (s.pv) s.pv.quaternion.identity(); });
+    tipText();
+    if (keepView) goView("tq");
+    resize();
+  }
 
   // ---- Avvio: leggo il modello incorporato nella pagina ----
   setTimeout(function () {
