@@ -865,7 +865,7 @@
   //  (simulazione a scopo dimostrativo, non un calcolo aerodinamico reale)
   // ---------------------------------------------------------------
   var TN = 420, TK = 44;
-  var tun = { prof: null, wheels: [], px: null, py: null, pz: null, hp: null, hc: null, ha: null, geo: null, pts: null, floor: null, floorTex: null,
+  var tun = { prof: null, wheels: [], px: null, py: null, pz: null, age: null, slow: null, life: null, hp: null, hc: null, ha: null, geo: null, pts: null, floor: null, floorTex: null,
               U: 3.4, spin: 0, seeded: false };
   var ptop = 0, pwid = 0;
   function smoothstep(a, b, x) { var u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }
@@ -941,6 +941,7 @@
     out[o] = R / 255; out[o + 1] = G / 255; out[o + 2] = B / 255;
   }
   function seed(i, anywhere) {
+    tun.age[i] = 0; tun.slow[i] = 0; tun.life[i] = 3.5 + Math.random() * 3;
     tun.px[i] = anywhere ? -4.6 + Math.random() * 9.2 : 4.6;
     tun.py[i] = 0.05 + Math.pow(Math.random(), 1.4) * 1.95;
     tun.pz[i] = (Math.random() - 0.5) * 3.6;
@@ -959,6 +960,7 @@
       [1, -1].forEach(function (sg) { tun.wheels.push({ x: s.center.x, y: s.center.y, z: sg * (sz.z / 2 - hw), r: sz.y / 2, hw: hw }); });
     });
     tun.px = new Float32Array(TN); tun.py = new Float32Array(TN); tun.pz = new Float32Array(TN);
+    tun.age = new Float32Array(TN); tun.slow = new Float32Array(TN); tun.life = new Float32Array(TN);
     tun.hp = new Float32Array(TN * TK * 3); tun.hc = new Float32Array(TN * TK * 3); tun.ha = new Float32Array(TN * TK);
     for (var i = 0; i < TN; i++) { seed(i, true); for (var j = 0; j < TK; j++) tun.ha[i * TK + j] = Math.pow(1 - j / TK, 1.6) * 0.95; }
     var geo = new THREE.BufferGeometry();
@@ -971,6 +973,7 @@
       fragmentShader: "varying vec3 vC; varying float vA; void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; gl_FragColor = vec4(vC, vA * (1.0 - d * 1.4)); }",
       transparent: true, depthWrite: false
     });
+    if (window.__debugTun) window.__tun = tun;
     tun.pts = new THREE.Points(geo, mat); tun.pts.frustumCulled = false; tun.pts.renderOrder = 5; tun.pts.visible = false;
     scene.add(tun.pts); tun.geo = geo;
 
@@ -988,7 +991,7 @@
     var U = tun.U, P = tun.prof, i, j;
     var nsub = clamp(Math.ceil(U * dt / 0.02), 1, 8), h = dt / nsub;
     for (i = 0; i < TN; i++) {
-      var x = tun.px[i], y = tun.py[i], z = tun.pz[i], respawn = false;
+      var x = tun.px[i], y = tun.py[i], z = tun.pz[i], respawn = false, lastSp = U;
       for (var sub = 0; sub < nsub && !respawn; sub++) {
         var d = sdf(x, y, z), vx = -U, vy = 0, vz = 0, ratio = 1, wake = 0;
         if (d < 0.75) {
@@ -998,6 +1001,10 @@
           var front = smoothstep(0.25, 0.9, gN.x);
           ratio = 1 - 0.78 * front * s + 0.42 * s * Math.max(0, gN.y) + 0.3 * s * Math.abs(gN.z);
           vx *= ratio; vy *= ratio; vz *= ratio;
+          if (front > 0) {
+            var ox = y - (ptop + 0.1) * 0.5, oz = z, on = Math.sqrt(ox * ox + oz * oz) + 0.05;
+            vy += ox / on * U * 0.55 * front * s; vz += oz / on * U * 0.55 * front * s;
+          }
         }
         if (y < 0.25) { var gf = 0.8 + 0.2 * (y / 0.25); vx *= gf; ratio *= gf; }
         var behind = P.xmin - x;
@@ -1010,16 +1017,22 @@
             vx *= 1 - 0.5 * wake; ratio *= 1 - 0.4 * wake;
           }
         }
+        lastSp = Math.sqrt(vx * vx + vy * vy + vz * vz);
         x += vx * h; y += vy * h; z += vz * h;
         var d2 = sdf(x, y, z);
         if (d2 < 0.012) { grad(x, y, z, d2); var pu = 0.012 - d2; x += gN.x * pu; y += gN.y * pu; z += gN.z * pu; }
         if (y < 0.03) y = 0.03;
-        if (x < -4.7 || Math.abs(z) > 2.2 || y > 2.6) { respawn = true; break; }
+        if (x < -4.7 || Math.abs(z) > 2.2 || y > 2.6 || x !== x || y !== y || z !== z) { respawn = true; break; }
         var bI = i * TK * 3;
         tun.hp.copyWithin(bI + 3, bI, bI + (TK - 1) * 3);
         tun.hc.copyWithin(bI + 3, bI, bI + (TK - 1) * 3);
         tun.hp[bI] = x; tun.hp[bI + 1] = y; tun.hp[bI + 2] = z;
         ramp(ratio, wake, tun.hc, bI);
+      }
+      if (!respawn) {
+        tun.age[i] += dt;
+        tun.slow[i] = lastSp < 0.2 * U ? tun.slow[i] + dt : 0;
+        if (tun.slow[i] > 0.45 || tun.age[i] > tun.life[i]) respawn = true;
       }
       if (respawn) seed(i, false); else { tun.px[i] = x; tun.py[i] = y; tun.pz[i] = z; }
     }
