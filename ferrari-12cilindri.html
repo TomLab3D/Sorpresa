@@ -423,6 +423,7 @@
 
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(30, 1, 0.05, 80);
+  if (window.__debugTun) window.__cam = camera;
 
   var envOk = false;
   try {
@@ -544,8 +545,10 @@
     goView(b.getAttribute("data-view"));
   });
 
+  var lastW = 0, lastH = 0, lastDpr = 0;
   function resize() {
     var w = Math.max(1, wrap.clientWidth), h = Math.max(1, wrap.clientHeight);
+    lastW = wrap.clientWidth; lastH = wrap.clientHeight; lastDpr = window.devicePixelRatio || 1;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -885,6 +888,8 @@
     requestAnimationFrame(frame);
     var now = performance.now() / 1000, dt = Math.min(0.05, now - last);
     last = now;
+    // se la zona del 3D cambia misura (caratteri che si caricano, barra del browser, rotazione), riadatto subito
+    if (wrap.clientWidth !== lastW || wrap.clientHeight !== lastH || (window.devicePixelRatio || 1) !== lastDpr) resize();
     var t = now - T0, i;
 
     if (ready && !reduce) {
