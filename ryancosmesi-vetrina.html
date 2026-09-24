@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Ryan Cosmesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f7f6f3;
+    --ink: #141414;
+    --ink-soft: rgba(20, 20, 20, 0.66);
+    --card: #ffffff;
+    --line: rgba(20, 20, 20, 0.13);
+    --gold: #a9812f;          /* oro per testi e linee su fondo chiaro */
+    --gold-bright: #d8b56a;   /* oro per icone su fondo nero */
+    --hero: #111111;
+    --hero-ink: #f7f2e8;
+    --font: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  }
+  /* variante scura: aggiungi ?tema=nero all'indirizzo */
+  :root[data-tema="nero"] {
+    --paper: #0d0d0d; --ink: #f5f2ea; --ink-soft: rgba(245, 242, 234, 0.7); --card: #171717; --line: rgba(245, 242, 234, 0.15);
+    --gold: #cfa95a; --gold-bright: #d8b56a; --hero: #1c1c1c; --hero-ink: #f7f2e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+  .app { max-width: 640px; margin: 0 auto; padding: 0 1.2rem max(2rem, env(safe-area-inset-bottom)); }
+
+  .hero {
+    background: var(--hero); color: var(--hero-ink);
+    margin: 0 -1.2rem; padding: max(1.6rem, env(safe-area-inset-top)) 1.4rem 1.7rem;
+    border-radius: 0 0 28px 28px;
+  }
+  .logo { font-weight: 800; font-size: clamp(2.5rem, 12.5vw, 3.7rem); line-height: 0.92; letter-spacing: -0.035em; font-variation-settings: "opsz" 96; }
+  .logo span { color: var(--gold-bright); }
+  .logo::after { content: ""; display: block; width: 3.4rem; height: 3px; margin-top: 1rem; background: var(--gold-bright); }
+  .since { margin-top: 0.9rem; font-size: 1rem; line-height: 1.45; color: color-mix(in srgb, var(--hero-ink) 78%, transparent); font-weight: 500; max-width: 36ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .chips span { font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--gold-bright) 60%, transparent); color: var(--hero-ink); }
+
+  .tiles { display: grid; gap: 0.8rem; margin-top: 1.4rem; }
+  .tile {
+    appearance: none; cursor: pointer; font: inherit; color: inherit; text-align: left;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem;
+    padding: 1.1rem 1.15rem; border-radius: 20px; background: var(--card); border: 1.5px solid var(--line);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .tile:active { transform: scale(0.98); }
+  .tile:hover { border-color: var(--ink); }
+  .tile .ic { width: 3.2rem; height: 3.2rem; border-radius: 14px; background: #111; color: var(--gold-bright); display: grid; place-items: center; }
+  .tile .ic svg { width: 1.7rem; height: 1.7rem; }
+  .tile h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .tile p { margin-top: 0.25rem; font-size: 0.92rem; color: var(--ink-soft); font-weight: 500; line-height: 1.3; }
+  .tile .arr { width: 1.4rem; height: 1.4rem; color: var(--gold); }
+
+  .lead { margin-top: 1.2rem; padding: 1.1rem 1.15rem; border-radius: 20px; background: var(--hero); color: var(--hero-ink); }
+  .lead b { display: block; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
+  .lead p { margin-top: 0.3rem; font-size: 0.92rem; line-height: 1.4; color: color-mix(in srgb, var(--hero-ink) 76%, transparent); }
+  .lead .btn { margin-top: 0.8rem; background: var(--gold-bright); border-color: var(--gold-bright); color: #141414; }
+
+  .back {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 0.95rem; color: var(--ink);
+    background: transparent; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0.5rem 1rem; margin-top: 1.2rem;
+    display: inline-flex; align-items: center; gap: 0.4rem; -webkit-tap-highlight-color: transparent;
+  }
+  .back svg { width: 0.9rem; height: 0.9rem; }
+  .cat-title { margin-top: 1.1rem; font-size: clamp(2rem, 10vw, 3rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .cat-title::after { content: ""; display: block; width: 2.6rem; height: 3px; margin-top: 0.7rem; background: var(--gold); }
+  .cat-sub { margin-top: 0.7rem; color: var(--ink-soft); font-weight: 500; font-size: 1rem; }
+  .group { margin-top: 1.5rem; }
+  .group h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.15rem; }
+  .group .gs { font-size: 0.86rem; color: var(--ink-soft); font-weight: 500; margin-bottom: 0.55rem; }
+  .links { display: grid; gap: 0.5rem; }
+  .link {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.8rem; text-decoration: none; color: var(--ink);
+    padding: 0.9rem 1.1rem; border-radius: 16px; background: var(--card); border: 1.5px solid var(--line);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .link:active { transform: scale(0.98); }
+  .link:hover { border-color: var(--ink); }
+  .link b { display: block; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+  .link small { display: block; margin-top: 0.15rem; font-size: 0.83rem; font-weight: 500; color: var(--ink-soft); }
+  .link svg { width: 1.15rem; height: 1.15rem; color: var(--gold); }
+  .link.first { background: #111; color: #f7f2e8; border-color: #111; }
+  .link.first small { color: rgba(247, 242, 232, 0.72); }
+  .link.first svg { color: var(--gold-bright); }
+  :root[data-tema="nero"] .link.first { background: #2a2a2a; border-color: #2a2a2a; }
+
+
+  .form { margin-top: 1.3rem; display: grid; gap: 0.9rem; }
+  .form label { display: grid; gap: 0.35rem; font-size: 0.9rem; font-weight: 700; }
+  .form input {
+    font: inherit; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--card);
+    border: 1.5px solid var(--line); border-radius: 14px; padding: 0.85rem 0.95rem; width: 100%; -webkit-appearance: none; appearance: none;
+  }
+  .form input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 30%, transparent); }
+  .form input.bad { border-color: #c0392b; }
+  .form fieldset { border: 0; display: grid; gap: 0.45rem; }
+  .form legend { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.1rem; }
+  .pick { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .pick button {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 0.92rem; color: var(--ink); background: transparent;
+    border: 1.5px solid var(--line); border-radius: 999px; padding: 0.5rem 0.95rem; -webkit-tap-highlight-color: transparent;
+  }
+  .pick button[aria-pressed="true"] { background: #111; border-color: #111; color: var(--gold-bright); }
+  :root[data-tema="nero"] .pick button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #111; }
+  .err { color: #c0392b; font-weight: 700; font-size: 0.92rem; }
+  :root[data-tema="nero"] .err { color: #ff8a7a; }
+  .ok { font-weight: 700; font-size: 0.95rem; padding: 0.8rem 1rem; border-radius: 14px; background: color-mix(in srgb, var(--gold) 16%, transparent); }
+  .note { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.4; }
+
+  .site { margin-top: 1.5rem; display: flex; }
+  .btn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.02rem; text-decoration: none; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;
+    padding: 0.95rem 1.4rem; border-radius: 999px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--ink); }
+
+  .contacts { margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+  .contacts h3 { font-size: 0.82rem; font-weight: 800; color: var(--ink-soft); margin-bottom: 0.7rem; letter-spacing: 0.02em; }
+  .crow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .crow .btn { padding: 0.75rem 0.6rem; font-size: 0.95rem; }
+  .info { margin-top: 1rem; font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); font-weight: 500; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="logo">Ryan<br><span>Cosmesi</span></div>
+    <p class="since" id="since"></p>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <main id="home">
+    <div class="tiles" id="tiles" aria-label="Categorie"></div>
+    <section class="lead" id="lead">
+      <b>Sei un professionista?</b>
+      <p>Compila i dati della tua attività: ti rispondiamo con prezzi e condizioni per l'ingrosso.</p>
+      <a class="btn" id="leadBtn" href="#listino">Richiedi il listino</a>
+    </section>
+  </main>
+
+  <main id="cat" hidden>
+    <button class="back" id="back" type="button"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M8 1.5 L3 6 L8 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tutte le categorie</button>
+    <h1 class="cat-title" id="catTitle"></h1>
+    <p class="cat-sub" id="catSub"></p>
+    <div id="catBody"></div>
+  </main>
+
+  <main id="listino" hidden>
+    <button class="back" id="back2" type="button"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M8 1.5 L3 6 L8 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tutte le categorie</button>
+    <h1 class="cat-title">Richiedi il listino</h1>
+    <p class="cat-sub">Compila i dati della tua attività: ti rispondiamo con prezzi e condizioni per l'ingrosso.</p>
+    <form class="form" id="lform" novalidate>
+      <fieldset><legend>Che attività hai?</legend><div class="pick" id="tipoRow"></div></fieldset>
+      <label>Nome dell'attività<input id="fAtt" autocomplete="organization" required></label>
+      <label>Partita IVA<input id="fIva" inputmode="numeric" placeholder="11 cifre" maxlength="16" autocomplete="off" required></label>
+      <label>Nome e cognome<input id="fNome" autocomplete="name" required></label>
+      <label>Città<input id="fCitta" autocomplete="address-level2"></label>
+      <label>Telefono<input id="fTel" type="tel" autocomplete="tel"></label>
+      <p class="err" id="fErr" role="alert" hidden></p>
+      <p class="ok" id="fOk" hidden></p>
+      <button class="btn" id="fSend" type="submit">Invia su WhatsApp</button>
+      <button class="btn ghost" id="fMail" type="button" hidden>Invia con l'app di posta</button>
+      <button class="btn ghost" id="fCopy" type="button">Copia il messaggio</button>
+      <p class="note" id="fNote">Si apre WhatsApp con il messaggio già scritto: lo invii tu. Questa pagina non salva i tuoi dati.</p>
+    </form>
+  </main>
+
+  <div class="site"><a class="btn" id="siteBtn" target="_blank" rel="noopener">Vai al sito ryancosmesi.it</a></div>
+
+  <section class="contacts" aria-label="Contatti">
+    <h3>Contatti</h3>
+    <div class="crow" id="crow"></div>
+    <p class="info" id="info"></p>
+  </section>
+</div>
+
+<script>
+(function () {
+  // =====================================================================
+  //  DA MODIFICARE: contatti, categorie e link
+  // =====================================================================
+  var SITE = "https://ryancosmesi.it";
+  var CONFIG = {
+    since: "Fornitura all'ingrosso per parrucchieri ed estetiste. Dal 2006 selezioniamo i migliori brand italiani e internazionali.",
+    chips: ["Ingrosso", "Dal 2006", "Marchi italiani e internazionali"],
+    company: "Ryan Cosmesi S.r.l.",
+    address: "Via Marigliano 123A, Somma Vesuviana (NA)",
+    hours: "Lun – Ven: 9:00 – 17:00",
+    email: "info@ryancosmesi.it",
+    phone: "+390818996285",            // numero da confermare
+    instagram: "https://www.instagram.com/ryan_cosmesi_s.r.l/",
+    whatsapp: ""                        // numero WhatsApp con prefisso, senza + e spazi: per esempio "393331234567"
+  };
+  var R = function (path) { return SITE + path; };
+  var ICON = {
+    marchi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.3 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
+    uomo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15l9-9 5 5-9 9z"/><path d="M14 4l3-1 4 4-1 3"/><path d="M6 12l3 3"/></svg>',
+    attrezzatura: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1a3 3 0 0 1-3 3H8a5 5 0 0 1-5-5z"/><path d="M8 12l-1 8h4l1-8"/><path d="M19 7h2"/></svg>',
+    arr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+    out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 16L16 8"/><path d="M9 8h7v7"/></svg>'
+  };
+
+  var CATS = [
+    { id: "marchi", title: "Marchi", sub: "I marchi che distribuiamo, con i loro siti ufficiali", icon: "marchi", blurb: "Nevitaly, Cotril, Moroccanoil, 6.ZERO, Jalyd",
+      groups: [
+        { name: "Nevitaly", links: [
+          { t: "Sito ufficiale", s: "nevitaly.com", u: "https://www.nevitaly.com/", first: true } ] },
+        { name: "Cotril", links: [
+          { t: "Sito ufficiale", s: "cotril.it", u: "https://cotril.it/", first: true },
+          { t: "Prodotti su Ryan Cosmesi", s: "", u: R("/collections/cotril") } ] },
+        { name: "Moroccanoil", links: [
+          { t: "Sito ufficiale", s: "it.moroccanoil.com", u: "https://it.moroccanoil.com/", first: true },
+          { t: "Area professionisti", s: "moroccanoilprofessionals.com", u: "https://moroccanoilprofessionals.com/it/" },
+          { t: "Prodotti su Ryan Cosmesi", s: "", u: R("/collections/moroccanoil") } ] },
+        { name: "6.ZERO", links: [
+          { t: "Sito ufficiale", s: "seipuntozero-haircare.it", u: "https://seipuntozero-haircare.it/", first: true },
+          { t: "Prodotti su Ryan Cosmesi", s: "", u: R("/collections/6-zero") } ] },
+        { name: "Jalyd", links: [
+          { t: "Sito ufficiale", s: "jalyd.com", u: "https://www.jalyd.com/", first: true } ] }
+      ] },
+    { id: "uomo", title: "Uomo", sub: "Capelli e barba", icon: "uomo", blurb: "Capelli e barba",
+      groups: [
+        { name: "Marchio", links: [ { t: "Gutss", s: "Prodotti su Ryan Cosmesi", u: R("/collections/gutss"), first: true } ] },
+        { name: "Capelli", links: [
+          { t: "Styling uomo", s: "", u: R("/collections/styling") },
+          { t: "Shampoo uomo", s: "", u: R("/collections/barba") } ] },
+        { name: "Barba", links: [
+          { t: "Olio dopo barba", s: "", u: R("/collections/olio-dopo-barba") },
+          { t: "Cologne", s: "", u: R("/collections/cologne") } ] }
+      ] },
+    { id: "attrezzatura", title: "Attrezzatura", sub: "Strumenti e accessori per il salone", icon: "attrezzatura", blurb: "Asciugacapelli, piastre e tosatrici",
+      groups: [
+        { name: "Marchi", links: [
+          { t: "Dyson", s: "Prodotti su Ryan Cosmesi", u: R("/collections/dyson"), first: true },
+          { t: "Gamma", s: "Prodotti su Ryan Cosmesi", u: R("/collections/gamma"), first: true } ] },
+        { name: "Strumenti e accessori", links: [
+          { t: "Asciugacapelli", s: "", u: R("/collections/asciugacapelli") },
+          { t: "Tosatrice", s: "", u: R("/collections/rasoio") },
+          { t: "Ferro", s: "", u: R("/collections/ferro") },
+          { t: "Piastra", s: "", u: R("/collections/piastra") },
+          { t: "Spazzola", s: "", u: R("/collections/spazzola") } ] }
+      ] }
+  ];
+  // =====================================================================
+
+
+  // ---- modulo "Richiedi il listino" ----
+  var tipo = "";
+  ["Parrucchiere", "Estetista", "Barbiere", "Altro"].forEach(function (n) {
+    var b = el("button", "", esc(n)); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      tipo = tipo === n ? "" : n;
+      var bs = $("tipoRow").querySelectorAll("button");
+      for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", bs[i].textContent === tipo ? "true" : "false");
+    });
+    $("tipoRow").appendChild(b);
+  });
+  function ivaDigits(v) { return String(v).replace(/\s+/g, "").replace(/^IT/i, ""); }
+  function ivaOk(v) {
+    var d = ivaDigits(v); if (!/^\d{11}$/.test(d)) return false;
+    var s = 0; for (var i = 0; i < 11; i++) { var n = +d.charAt(i); if (i % 2 === 1) { n *= 2; if (n > 9) n -= 9; } s += n; }
+    return s % 10 === 0;
+  }
+  var viaWa = !!CONFIG.whatsapp;
+  if (!viaWa) {
+    $("fSend").textContent = "Invia con Gmail";
+    $("fMail").hidden = false;
+    $("fNote").textContent = "Si apre Gmail con il messaggio già scritto: lo invii tu. Se non usi Gmail, scegli «Invia con l'app di posta» oppure copia il messaggio. Questa pagina non salva i tuoi dati.";
+  }
+  function val(id) { return $(id).value.trim(); }
+  function message() {
+    return ["Buongiorno, vorrei ricevere il listino per l'ingrosso.", "",
+      tipo ? "Tipo di attività: " + tipo : "", "Nome attività: " + val("fAtt"), "Partita IVA: " + ivaDigits(val("fIva")),
+      "Referente: " + val("fNome"), val("fCitta") ? "Città: " + val("fCitta") : "", val("fTel") ? "Telefono: " + val("fTel") : "",
+      "", "Richiesta inviata dalla pagina di Ryan Cosmesi."].filter(function (r, i) { return i < 2 || r !== ""; }).join("\n");
+  }
+  function check() {
+    var bad = [], err = "";
+    ["fAtt", "fNome"].forEach(function (id) { $(id).classList.toggle("bad", !val(id)); if (!val(id)) bad.push(id); });
+    var okIva = ivaOk(val("fIva")); $("fIva").classList.toggle("bad", !okIva);
+    if (bad.length) err = "Compila il nome dell'attività e il tuo nome.";
+    else if (!okIva) err = "Controlla la partita IVA: servono 11 cifre valide.";
+    $("fErr").hidden = !err; $("fErr").textContent = err; $("fOk").hidden = true;
+    return !err;
+  }
+  $("lform").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!check()) return;
+    var msg = message();
+    if (viaWa) {
+      var url = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(msg);
+      var w = window.open(url, "_blank"); if (!w) window.location.href = url;
+      $("fOk").textContent = "Si è aperto WhatsApp con il messaggio pronto: premi Invia per completare la richiesta."; $("fOk").hidden = false;
+    } else {
+      var g = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(CONFIG.email) + "&su=" + encodeURIComponent("Richiesta listino ingrosso") + "&body=" + encodeURIComponent(msg);
+      var w2 = window.open(g, "_blank"); if (!w2) window.location.href = g;
+      $("fOk").textContent = "Si è aperto Gmail con il messaggio pronto: premi Invia per completare la richiesta."; $("fOk").hidden = false;
+    }
+  });
+  $("fMail").addEventListener("click", function () {
+    if (!check()) return;
+    window.location.href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent("Richiesta listino ingrosso") + "&body=" + encodeURIComponent(message());
+    $("fOk").textContent = "Se non si apre la posta, tocca «Copia il messaggio» e incollalo dove preferisci."; $("fOk").hidden = false;
+  });
+  $("fCopy").addEventListener("click", function () {
+    if (!check()) return;
+    var msg = message();
+    function done() { $("fOk").textContent = "Messaggio copiato: incollalo in WhatsApp o nella mail."; $("fOk").hidden = false; }
+    try { navigator.clipboard.writeText(msg).then(done, done); } catch (er) { done(); }
+  });
+
+  // variante scura: ?tema=nero
+  try { if (new URLSearchParams(location.search).get("tema") === "nero") document.documentElement.setAttribute("data-tema", "nero"); } catch (e) {}
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  $("since").textContent = CONFIG.since;
+  CONFIG.chips.forEach(function (p) { $("chips").appendChild(el("span", "", esc(p))); });
+  $("siteBtn").href = SITE;
+  // categorie
+  CATS.forEach(function (c) {
+    var b = el("button", "tile", '<span class="ic">' + ICON[c.icon] + '</span><span><h2>' + esc(c.title) + '</h2><p>' + esc(c.blurb) + '</p></span><span class="arr">' + ICON.arr + '</span>');
+    b.type = "button"; b.setAttribute("data-cat", c.id);
+    $("tiles").appendChild(b);
+  });
+  $("tiles").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button") : null; if (b) location.hash = b.getAttribute("data-cat");
+  });
+  $("back").addEventListener("click", function () { location.hash = ""; });
+  $("back2").addEventListener("click", function () { location.hash = ""; });
+
+  function show(id) {
+    var c = null; CATS.forEach(function (x) { if (x.id === id) c = x; });
+    $("listino").hidden = id !== "listino";
+    if (id === "listino") { $("home").hidden = true; $("cat").hidden = true; document.title = "Richiedi il listino · Ryan Cosmesi"; window.scrollTo(0, 0); return; }
+    if (!c) { $("home").hidden = false; $("cat").hidden = true; document.title = "Ryan Cosmesi"; window.scrollTo(0, 0); return; }
+    $("home").hidden = true; $("cat").hidden = false;
+    $("catTitle").textContent = c.title; $("catSub").textContent = c.sub; document.title = c.title + " · Ryan Cosmesi";
+    var body = $("catBody"); body.innerHTML = "";
+    c.groups.forEach(function (g) {
+      var box = el("div", "group", "<h3>" + esc(g.name) + "</h3>"), list = el("div", "links");
+      g.links.forEach(function (l) {
+        var a = el("a", "link" + (l.first ? " first" : ""), "<span><b>" + esc(l.t) + "</b>" + (l.s ? "<small>" + esc(l.s) + "</small>" : "") + "</span>" + ICON.out);
+        a.href = l.u; a.target = "_blank"; a.rel = "noopener"; list.appendChild(a);
+      });
+      box.appendChild(list); body.appendChild(box);
+    });
+    window.scrollTo(0, 0);
+  }
+  function route() { show((location.hash || "").replace("#", "")); }
+  window.addEventListener("hashchange", route);
+
+  // contatti
+  var cr = $("crow");
+  function btn(txt, href) { var a = el("a", "btn ghost", esc(txt)); a.href = href; if (/^https?:/.test(href)) { a.target = "_blank"; a.rel = "noopener"; } cr.appendChild(a); return a; }
+  if (CONFIG.phone) btn("Chiama", "tel:" + CONFIG.phone);
+  if (CONFIG.email) btn("Scrivici", "mailto:" + CONFIG.email);
+  if (CONFIG.instagram) btn("Instagram", CONFIG.instagram);
+  btn("Come arrivare", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CONFIG.company + ", " + CONFIG.address));
+  var vcf = ["BEGIN:VCARD", "VERSION:3.0", "FN:" + CONFIG.company, "ORG:" + CONFIG.company,
+    CONFIG.phone ? "TEL;TYPE=WORK,VOICE:" + CONFIG.phone : "", CONFIG.email ? "EMAIL;TYPE=WORK:" + CONFIG.email : "",
+    "URL:" + SITE, "ADR;TYPE=WORK:;;Via Marigliano 123A;Somma Vesuviana;NA;80049;Italia", "END:VCARD"].filter(Boolean).join("\r\n");
+  var save = el("a", "btn", "Salva nei contatti"); save.href = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcf); save.download = "Ryan-Cosmesi.vcf"; save.style.gridColumn = "1 / -1"; cr.appendChild(save);
+  $("info").innerHTML = esc(CONFIG.company) + "<br>" + esc(CONFIG.address) + "<br>" + esc(CONFIG.hours);
+
+  route();
+})();
+</script>
+</body>
+</html>
