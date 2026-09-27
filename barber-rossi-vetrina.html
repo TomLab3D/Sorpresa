@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vetrina</title>
+<style id="baseStyle">
+  :root {
+    --paper: #f7f6f3; --ink: #141414; --ink-soft: rgba(20,20,20,0.66); --card: #ffffff; --line: rgba(20,20,20,0.13);
+    --accent: #a9812f; --accent-bright: #d8b56a; --hero: #111111; --hero-ink: #f7f2e8;
+    --font: "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100dvh; padding-bottom: 5.4rem; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1.2rem; }
+
+  /* ---- Navigazione: barra fissa in alto, non un blocco della pagina ---- */
+  .topnav { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .navrow { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.8rem 1.2rem; }
+  .nav-brand { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .navlinks { display: flex; gap: 1.1rem; overflow-x: auto; scrollbar-width: none; }
+  .navlinks::-webkit-scrollbar { display: none; }
+  .navlinks a { font-size: 0.86rem; font-weight: 700; color: var(--ink-soft); text-decoration: none; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+  .navlinks a:hover, .navlinks a:active { color: var(--ink); }
+
+  /* ---- Hero: fotografica (se c'è una galleria), altrimenti a tinta piena ---- */
+  .hero-photo { position: relative; min-height: 58vh; display: flex; align-items: flex-end; background-color: var(--hero); background-size: cover; background-position: center; overflow: hidden; }
+  .hero-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--hero) 30%, transparent) 0%, rgba(10,10,10,0.72) 100%); }
+  .hero-photo.hero-flat { min-height: 42vh; }
+  .hero-photo.hero-flat::before { background: none; }
+  .hero-content { position: relative; z-index: 1; width: 100%; padding: max(1.6rem, env(safe-area-inset-top)) 1.2rem 2rem; color: #fdfaf4; }
+  .hero-flat .hero-content { color: var(--hero-ink); padding-top: max(2.2rem, env(safe-area-inset-top)); }
+  .logo { font-weight: 800; font-size: clamp(2.2rem, 11vw, 3.4rem); line-height: 0.95; letter-spacing: -0.03em; }
+  .logo span { color: var(--accent-bright); }
+  .logo-img { display: block; max-height: 4rem; max-width: 70%; object-fit: contain; object-position: left center; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35)); }
+  .tagline { margin-top: 0.7rem; font-size: 1rem; line-height: 1.45; font-weight: 500; max-width: 34ch; opacity: 0.92; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .chips span { font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 999px; border: 1px solid rgba(255,255,255,0.5); }
+  .hero-flat .chips span { border-color: color-mix(in srgb, var(--accent-bright) 60%, transparent); }
+
+  main { padding-top: 2.2rem; }
+  section.block { margin-bottom: 2.6rem; }
+  .block h2 { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.1rem; }
+
+  /* ---- Servizi: come un vero menu, nome __________ prezzo ---- */
+  .svc-group { margin-top: 1.6rem; }
+  .svc-group:first-child { margin-top: 0; }
+  .svc-group .svc-h { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 0.7rem; }
+  .svc-row { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.5rem 0; }
+  .svc-row .n { font-size: 0.98rem; font-weight: 600; white-space: nowrap; }
+  .svc-row .n small { display: block; font-size: 0.78rem; font-weight: 500; color: var(--ink-soft); white-space: normal; }
+  .svc-row .fill { flex: 1; border-bottom: 2px dotted var(--line); margin: 0 0 0.28rem; min-width: 0.6rem; }
+  .svc-row .p { font-size: 0.98rem; font-weight: 800; color: var(--accent); white-space: nowrap; }
+
+  /* ---- Variante a categorie: piastrelle in home, poi una pagina per
+         categoria con listino e foto sotto ---- */
+  .tiles { display: grid; gap: 0.7rem; }
+  .tile {
+    appearance: none; cursor: pointer; text-decoration: none; color: inherit; text-align: left;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.9rem;
+    padding: 1rem 1.05rem; border-radius: 16px; background: var(--card); border: 1.5px solid var(--line);
+    -webkit-tap-highlight-color: transparent; transition: border-color 0.2s ease;
+  }
+  .tile:hover { border-color: var(--accent); }
+  .tile .ic { width: 2.8rem; height: 2.8rem; border-radius: 12px; background: var(--hero); color: var(--accent-bright); display: grid; place-items: center; font-size: 1.3rem; flex: 0 0 auto; }
+  .tile h3 { font-size: 1.08rem; font-weight: 800; letter-spacing: -0.01em; }
+  .tile p { margin-top: 0.15rem; font-size: 0.85rem; color: var(--ink-soft); font-weight: 500; }
+  .tile .arr { width: 1.2rem; height: 1.2rem; color: var(--accent); flex: 0 0 auto; }
+  [data-style="audace"] .tile { border-radius: 0; border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+  [data-style="audace"] .tile .ic { border-radius: 0; }
+  [data-style="elegante"] .tile { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 1.1rem 0.2rem; }
+  [data-style="elegante"] .tile .ic { display: none; }
+  [data-style="editoriale"] .tile { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 1.1rem 0.2rem; }
+  [data-style="editoriale"] .tiles .tile:last-child { border-bottom: 1px solid var(--line); }
+  [data-style="editoriale"] .tile .ic { display: none; }
+
+  .back-link { display: inline-block; font-size: 0.9rem; font-weight: 700; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--ink); }
+  #catPage .svc-body { margin-top: 0.6rem; }
+  #catPage .gallery { margin-top: 1.5rem; border-radius: 14px; overflow: hidden; }
+
+  /* ---- Galleria: a tutta larghezza, non contenuta ---- */
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .gphoto { appearance: none; cursor: pointer; padding: 0; border: 0; aspect-ratio: 1/1; background: var(--card); overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  .gphoto img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+  .gphoto:active img { transform: scale(1.04); }
+  .lightbox { position: fixed; inset: 0; background: rgba(10,10,10,0.94); z-index: 50; display: grid; place-items: center; padding: 1.2rem; }
+  .lightbox img { max-width: 100%; max-height: 85vh; object-fit: contain; }
+  .lightbox button { position: absolute; top: max(1rem, env(safe-area-inset-top)); right: 1.1rem; appearance: none; cursor: pointer; width: 2.6rem; height: 2.6rem; border-radius: 999px; border: 0; background: rgba(255,255,255,0.16); color: #fff; font-size: 1.4rem; font-weight: 700; }
+
+  .info-block { padding: 1.3rem 1.3rem; border-radius: 18px; background: var(--hero); color: var(--hero-ink); }
+  .info-block b { display: block; font-size: 1.05rem; font-weight: 800; }
+  .info-block p { margin-top: 0.35rem; font-size: 0.92rem; line-height: 1.45; color: color-mix(in srgb, var(--hero-ink) 80%, transparent); }
+
+  .btn { appearance: none; cursor: pointer; font: inherit; font-weight: 800; font-size: 1rem; text-decoration: none; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.9rem 1.3rem; border-radius: 999px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease; }
+  .btn:active { transform: scale(0.97); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--ink); }
+
+  .crow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
+  .crow .btn { padding: 0.72rem 0.6rem; font-size: 0.94rem; }
+  .info { margin-top: 1rem; font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); font-weight: 500; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* ---- Prenota: barra fissa in fondo, sempre visibile mentre scorri ---- */
+  .sticky-book { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 0.75rem 1.2rem max(0.75rem, env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--paper) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+  .book-btn { appearance: none; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.03rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.55rem; width: 100%; padding: 0.95rem 1.4rem; border-radius: 999px; border: 2px solid var(--hero); background: var(--hero); color: var(--hero-ink); -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease; }
+  .book-btn:active { transform: scale(0.97); }
+  .book-btn svg { width: 1.15rem; height: 1.15rem; }
+
+  /* =======================================================================
+     Dentro lo stile "Minimale": alcuni tratti restano modificabili.
+     ======================================================================= */
+  [data-radius-soft] .info-block { border-radius: 28px; }
+  [data-radius-soft] .gphoto { border-radius: 6px; }
+  [data-shadow-soft] .topnav { box-shadow: 0 6px 20px rgba(0,0,0,0.05); border-bottom: 0; }
+  [data-chips-filled] .chips span { border: 0; background: rgba(255,255,255,0.22); }
+  [data-chips-filled].hero-flat .chips span, [data-hero-staccata] .hero-flat .chips span { background: color-mix(in srgb, var(--accent-bright) 22%, transparent); }
+
+  /* =======================================================================
+     STILE "editoriale": rivista — righe sottili, maiuscoletto, no colore pieno.
+     ======================================================================= */
+  [data-style="editoriale"] .topnav { background: var(--paper); backdrop-filter: none; border-bottom: 2px solid var(--ink); }
+  [data-style="editoriale"] .nav-brand { text-transform: uppercase; letter-spacing: 0.04em; }
+  [data-style="editoriale"] .navlinks a { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; }
+  [data-style="editoriale"] .hero-photo { filter: grayscale(0.55) contrast(1.05); }
+  [data-style="editoriale"] .hero-photo::before { background: linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.1) 55%); }
+  [data-style="editoriale"] .logo { font-size: clamp(2.6rem, 13vw, 4.2rem); }
+  [data-style="editoriale"] .block h2 { color: var(--ink); border-bottom: 2px solid var(--ink); padding-bottom: 0.5rem; }
+  [data-style="editoriale"] .svc-group .svc-h { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.88rem; }
+  [data-style="editoriale"] .gallery { grid-template-columns: repeat(3, 1fr); gap: 1px; }
+  [data-style="editoriale"] .info-block { border-radius: 0; background: transparent; color: var(--ink); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); padding: 1.3rem 0; }
+  [data-style="editoriale"] .btn, [data-style="editoriale"] .book-btn { border-radius: 0; }
+
+  /* =======================================================================
+     STILE "elegante": boutique — centrato, righe dorate, molto respiro.
+     ======================================================================= */
+  [data-style="elegante"] .topnav { background: var(--paper); backdrop-filter: none; }
+  [data-style="elegante"] .navrow { flex-direction: column; gap: 0.5rem; padding: 0.7rem 1.2rem; }
+  [data-style="elegante"] .nav-brand { font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.92rem; }
+  [data-style="elegante"] .navlinks { gap: 1.3rem; }
+  [data-style="elegante"] .navlinks a { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; color: var(--ink-soft); }
+  [data-style="elegante"] .hero-content { text-align: center; }
+  [data-style="elegante"] .logo { font-weight: 500; letter-spacing: 0.03em; }
+  [data-style="elegante"] .tagline { margin-left: auto; margin-right: auto; font-style: italic; }
+  [data-style="elegante"] .chips { justify-content: center; }
+  [data-style="elegante"] .block h2 { text-align: center; letter-spacing: 0.16em; }
+  [data-style="elegante"] .svc-group { text-align: center; }
+  [data-style="elegante"] .svc-group .svc-h { font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem; }
+  [data-style="elegante"] .svc-row { justify-content: center; }
+  [data-style="elegante"] .svc-row .fill { max-width: 3.5rem; border-bottom-style: solid; border-bottom-width: 1px; border-color: var(--accent); }
+  [data-style="elegante"] .svc-row .p { color: var(--ink); font-weight: 500; }
+  [data-style="elegante"] .gallery { gap: 0.5rem; padding: 0 1.2rem; max-width: 640px; margin: 0 auto; }
+  [data-style="elegante"] .btn, [data-style="elegante"] .book-btn { border-radius: 0; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+  [data-style="elegante"] .sticky-book { display: flex; justify-content: center; }
+  [data-style="elegante"] .book-btn { width: auto; padding: 0.9rem 2.4rem; }
+
+  /* =======================================================================
+     STILE "audace": poster — bordi spessi, ombra netta, tutto maiuscolo.
+     ======================================================================= */
+  [data-style="audace"] .topnav { background: var(--paper); backdrop-filter: none; border-bottom: 3px solid var(--ink); }
+  [data-style="audace"] .nav-brand { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .navlinks a { text-transform: uppercase; font-weight: 800; font-size: 0.78rem; color: var(--ink); }
+  [data-style="audace"] .hero-photo::before { background: linear-gradient(180deg, color-mix(in srgb, var(--hero) 55%, transparent) 0%, rgba(0,0,0,0.8) 100%); }
+  [data-style="audace"] .logo { text-transform: uppercase; }
+  [data-style="audace"] .chips span { border-radius: 0; border-width: 2px; font-weight: 800; text-transform: uppercase; }
+  [data-style="audace"] .block h2 { color: var(--ink); font-weight: 800; }
+  [data-style="audace"] .svc-group .svc-h { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .svc-row { border: 2.5px solid var(--ink); padding: 0.65rem 0.8rem; margin-bottom: 0.5rem; box-shadow: 3px 3px 0 var(--ink); }
+  [data-style="audace"] .svc-row .fill { display: none; }
+  [data-style="audace"] .gphoto { border: 2px solid var(--paper); }
+  [data-style="audace"] .info-block { border-radius: 0; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+  [data-style="audace"] .btn, [data-style="audace"] .book-btn { border-radius: 0; border-width: 2.5px; }
+  [data-style="audace"] .sticky-book { border-top: 3px solid var(--ink); }
+  [data-style="audace"] .book-btn { box-shadow: 4px 4px 0 var(--hero-ink); }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+</style>
+</head>
+<body>
+  <nav class="topnav">
+    <div class="navrow">
+      <span class="nav-brand" id="navBrand"></span>
+      <div class="navlinks" id="navLinks"></div>
+    </div>
+  </nav>
+
+  <header class="hero-photo" id="hero">
+    <div class="hero-content wrap">
+      <div class="logo" id="logo" hidden></div>
+      <img class="logo-img" id="logoImg" hidden alt="">
+      <p class="tagline" id="tagline"></p>
+      <div class="chips" id="chips"></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="block wrap" id="services" hidden>
+      <h2>Listino</h2>
+      <div id="svcHost"></div>
+    </section>
+
+    <section class="block" id="galleryBlock" hidden>
+      <h2 class="wrap" id="galleryTitleH">I nostri lavori</h2>
+      <div class="gallery" id="gallery"></div>
+    </section>
+
+    <section class="block wrap" id="infoBlockWrap" hidden>
+      <div class="info-block">
+        <b id="infoTitle"></b>
+        <p id="infoText"></p>
+      </div>
+    </section>
+
+    <section class="block wrap" id="contattiBlock">
+      <h2>Contatti</h2>
+      <div class="site"><a class="btn ghost" id="siteBtn" target="_blank" rel="noopener">-</a></div>
+      <div class="crow" id="crow"></div>
+      <p class="info" id="info"></p>
+    </section>
+  </main>
+
+  <section class="block wrap" id="catPage" hidden>
+    <a href="#services" class="back-link">&larr; Torna al listino</a>
+    <h2 id="catPageTitle" style="margin-top:0.9rem;text-transform:none;letter-spacing:normal;font-size:1.4rem;color:var(--ink)"></h2>
+    <div id="catPageBody"></div>
+    <div class="gallery" id="catPageGallery"></div>
+  </section>
+
+  <div class="sticky-book" id="stickyBook" hidden>
+    <a class="book-btn" id="bookBtn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>
+      <span id="bookLabel">Prenota ora</span>
+    </a>
+  </div>
+
+  <div id="lightboxHost"></div>
+
+<script type="text/plain" id="cfgData">/*__CFG_START__*/var CONFIG = {"logo":"","coverPhoto":"","brandLine1":"Barber","brandLine2":"Rossi","tagline":"Taglio, barba e styling. Su appuntamento.","chips":["Dal 2015","Solo su appuntamento"],"siteUrl":"https://esempio.it","siteButtonLabel":"Vai al sito esempio.it","favicon":"✂️","colors":{"paper":"#f7f6f3","hero":"#111111","accent":"#a9812f"},"style":"editoriale","styleOptions":{"heroDetached":false,"roundSoft":false,"shadow":false,"chipsFilled":false},"font":{"family":"Bricolage Grotesque","href":"https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap"},"services":[{"id":"taglio","title":"Taglio","items":[{"name":"Taglio uomo","price":"15€","duration":""},{"name":"Taglio + barba","price":"22€","duration":""}],"photos":[]},{"id":"trattamenti","title":"Trattamenti","items":[{"name":"Keratina","price":"30€","duration":""}],"photos":[]}],"servicesMode":"pages","gallery":[],"galleryTitle":"I nostri lavori","booking":{"enabled":true,"label":"Prenota ora","type":"whatsapp","whatsappNumber":"","whatsappMessage":"Ciao! Vorrei prenotare un appuntamento.","url":""},"leadInfo":{"enabled":true,"title":"","text":""},"company":"Nome Attività","address":"","hours":"","email":"","phone":"","socials":[{"label":"Instagram","url":""},{"label":"Facebook","url":""},{"label":"TikTok","url":""},{"label":"YouTube","url":""},{"label":"LinkedIn","url":""}]};/*__CFG_END__*/</script>
+<script>
+(function () {
+  /* ========================================================================
+     Tutto arriva da CONFIG (iniettato sopra come JSON dallo strumento).
+     Qui sotto: solo il motore che disegna la pagina. Non serve toccarlo.
+     ======================================================================== */
+  var CONFIG = (function () {
+    var s = document.getElementById("cfgData").textContent;
+    var m = s.match(/var CONFIG = ([\s\S]*);/);
+    return m ? JSON.parse(m[1]) : {};
+  })();
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---------------------------------------------------------------
+  //  Colori: da pochi colori scelti, calcolo tutto il resto in modo
+  //  che il testo resti sempre leggibile, qualunque colore si scelga.
+  // ---------------------------------------------------------------
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function hexToRgb(hex) {
+    hex = (hex || "#888888").replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgbToHex(r, g, b) {
+    function h(v) { var x = Math.round(clamp01(v / 255) * 255).toString(16); return x.length === 1 ? "0" + x : x; }
+    return "#" + h(r) + h(g) + h(b);
+  }
+  function luminance(hex) {
+    var rgb = hexToRgb(hex).map(function (v) {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  }
+  function isDark(hex) { return luminance(hex) < 0.5; }
+  function mix(hexA, hexB, t) {
+    var a = hexToRgb(hexA), b = hexToRgb(hexB);
+    return rgbToHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
+  }
+  function hexToHsl(hex) {
+    var rgb = hexToRgb(hex).map(function (v) { return v / 255; }), r = rgb[0], g = rgb[1], b = rgb[2];
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      var d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0); else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return [h * 360, s, l];
+  }
+  function hslToHex(h, s, l) {
+    h /= 360;
+    function hue2rgb(p, q, t) { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
+    var r, g, b;
+    if (s === 0) { r = g = b = l; } else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return rgbToHex(r * 255, g * 255, b * 255);
+  }
+  function accentFor(bgHex, accentHex) {
+    var hsl = hexToHsl(accentHex);
+    // Se il colore scelto è già bianco, nero o un grigio (poca saturazione),
+    // è una scelta voluta: va rispettata così com'è, non "corretta" verso
+    // una tinta accesa. Forzare una saturazione minima trasformerebbe un
+    // bianco in un colore acceso (es. rosa) che l'utente non ha scelto.
+    if (hsl[1] < 0.08) return isDark(bgHex) ? LIGHT_INK : DARK_INK;
+    var sat = Math.max(0.35, hsl[1]);
+    return hslToHex(hsl[0], sat, isDark(bgHex) ? 0.68 : 0.4);
+  }
+
+  var LIGHT_INK = "#f5f2ea", DARK_INK = "#141414";
+  var col = CONFIG.colors || {};
+  var paper = col.paper || "#f7f6f3";
+  var hero = col.hero || "#111111";
+  var accentHex = col.accent || "#a9812f";
+  // I quattro colori del testo hanno un valore calcolato automaticamente
+  // (sempre leggibile su qualunque sfondo) ma possono essere sostituiti
+  // a mano dallo strumento: se CONFIG li specifica, vincono loro.
+  var ink = col.ink || (isDark(paper) ? LIGHT_INK : DARK_INK);
+  var heroInk = col.heroInk || (isDark(hero) ? LIGHT_INK : DARK_INK);
+  var card = isDark(paper) ? mix(paper, "#ffffff", 0.12) : mix(paper, "#ffffff", 0.85);
+  var accentOnPaper = col.accentOnPaper || accentFor(paper, accentHex);
+  var accentOnHero = col.accentOnHero || accentFor(hero, accentHex);
+  var root = document.documentElement.style;
+  root.setProperty("--paper", paper);
+  root.setProperty("--ink", ink);
+  root.setProperty("--card", card);
+  root.setProperty("--hero", hero);
+  root.setProperty("--hero-ink", heroInk);
+  root.setProperty("--accent", accentOnPaper);
+  root.setProperty("--accent-bright", accentOnHero);
+
+  // ---------------------------------------------------------------
+  //  Carattere: carico il font scelto (Google Fonts) e lo applico.
+  // ---------------------------------------------------------------
+  if (CONFIG.font && CONFIG.font.href) {
+    ["https://fonts.googleapis.com", "https://fonts.gstatic.com"].forEach(function (u) {
+      var l = document.createElement("link"); l.rel = "preconnect"; l.href = u; if (u.indexOf("gstatic") >= 0) l.crossOrigin = "anonymous";
+      document.head.appendChild(l);
+    });
+    var fl = document.createElement("link"); fl.rel = "stylesheet"; fl.href = CONFIG.font.href;
+    document.head.appendChild(fl);
+  }
+  root.setProperty("--font", (CONFIG.font && CONFIG.font.family ? '"' + CONFIG.font.family + '", ' : "") + '"Helvetica Neue", Arial, sans-serif');
+
+  // ---------------------------------------------------------------
+  //  Favicon
+  // ---------------------------------------------------------------
+  if (CONFIG.favicon) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">' + CONFIG.favicon + '</text></svg>';
+    var lf = document.createElement("link"); lf.rel = "icon"; lf.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    document.head.appendChild(lf);
+  }
+
+  // ---------------------------------------------------------------
+  //  Stile
+  // ---------------------------------------------------------------
+  document.body.setAttribute("data-style", CONFIG.style || "minimale");
+  (function () {
+    var o = CONFIG.styleOptions || {};
+    var b = document.body;
+    if (o.roundSoft) b.setAttribute("data-radius-soft", "");
+    if (o.shadow) b.setAttribute("data-shadow-soft", "");
+    if (o.chipsFilled) b.setAttribute("data-chips-filled", "");
+  })();
+
+  // ---------------------------------------------------------------
+  //  Navigazione + testata
+  // ---------------------------------------------------------------
+  document.title = ((CONFIG.brandLine1 || "") + " " + (CONFIG.brandLine2 || "")).trim() || "Vetrina";
+  $("navBrand").textContent = ((CONFIG.brandLine1 || "") + " " + (CONFIG.brandLine2 || "")).trim();
+  if (CONFIG.logo) {
+    $("logoImg").src = CONFIG.logo; $("logoImg").alt = CONFIG.brandLine1 || "";
+    $("logoImg").hidden = false;
+  } else {
+    $("logo").innerHTML = esc(CONFIG.brandLine1 || "") + (CONFIG.brandLine2 ? "<br><span>" + esc(CONFIG.brandLine2) + "</span>" : "");
+    $("logo").hidden = false;
+  }
+  $("tagline").textContent = CONFIG.tagline || "";
+  (CONFIG.chips || []).forEach(function (p) { $("chips").appendChild(el("span", "", esc(p))); });
+
+  var GAL = CONFIG.gallery || [];
+  var hero = $("hero");
+  if (CONFIG.coverPhoto) {
+    hero.style.backgroundImage = "url('" + CONFIG.coverPhoto + "')";
+  } else {
+    hero.classList.add("hero-flat");
+  }
+
+  var SVC = CONFIG.services || [];
+  var navLinks = [];
+  if (SVC.length) navLinks.push(["#services", "Listino"]);
+  if (GAL.length) navLinks.push(["#galleryBlock", "Galleria"]);
+  navLinks.push(["#contattiBlock", "Contatti"]);
+  navLinks.forEach(function (p) {
+    var a = el("a", "", esc(p[1])); a.href = p[0];
+    $("navLinks").appendChild(a);
+  });
+
+  // ---------------------------------------------------------------
+  //  Prenota: barra fissa in basso
+  // ---------------------------------------------------------------
+  var BOOK = CONFIG.booking || { enabled: false };
+  if (BOOK.enabled) {
+    $("stickyBook").hidden = false;
+    $("bookLabel").textContent = BOOK.label || "Prenota ora";
+    if (BOOK.type === "whatsapp" && BOOK.whatsappNumber) {
+      var msg = BOOK.whatsappMessage || "Vorrei prenotare un appuntamento.";
+      $("bookBtn").href = "https://wa.me/" + BOOK.whatsappNumber + "?text=" + encodeURIComponent(msg);
+    } else {
+      $("bookBtn").href = BOOK.url || "#";
+    }
+  } else {
+    document.body.style.paddingBottom = "0";
+  }
+
+  // ---------------------------------------------------------------
+  //  Listino
+  // ---------------------------------------------------------------
+  var ICON_ARR = '<svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  function slugify(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  function buildSvcBody(g) {
+    var body = el("div", "svc-body");
+    (g.items || []).forEach(function (it) {
+      var row = el("div", "svc-row",
+        '<span class="n">' + esc(it.name) + (it.duration ? '<small>' + esc(it.duration) + '</small>' : '') + '</span>' +
+        '<span class="fill"></span>' +
+        '<span class="p">' + esc(it.price) + '</span>'
+      );
+      body.appendChild(row);
+    });
+    return body;
+  }
+  function buildPhotoGrid(photos) {
+    var grid = el("div", "gallery");
+    (photos || []).forEach(function (src) {
+      var b = el("button", "gphoto", '<img src="' + src + '" alt="" loading="lazy">');
+      b.type = "button";
+      b.addEventListener("click", function () { openLightbox(src); });
+      grid.appendChild(b);
+    });
+    return grid;
+  }
+  var SVCMODE = CONFIG.servicesMode === "pages" ? "pages" : "open";
+  SVC.forEach(function (g, idx) { g.id = g.id || slugify(g.title) || ("gruppo-" + idx); });
+
+  if (SVC.length) {
+    $("services").hidden = false;
+    var svcHost = $("svcHost");
+    if (SVCMODE === "pages") {
+      var tiles = el("div", "tiles");
+      SVC.forEach(function (g) {
+        var count = (g.items || []).length;
+        var a = document.createElement("a");
+        a.className = "tile"; a.href = "#cat-" + g.id;
+        a.innerHTML = '<span class="ic">&#9986;&#65039;</span><span><h3>' + esc(g.title) + '</h3><p>' + count + (count === 1 ? " servizio" : " servizi") + '</p></span>' + ICON_ARR;
+        tiles.appendChild(a);
+      });
+      svcHost.appendChild(tiles);
+    } else {
+      SVC.forEach(function (g) {
+        var body = buildSvcBody(g);
+        var box = el("div", "svc-group");
+        var h3 = el("h3", "svc-h", esc(g.title));
+        box.appendChild(h3);
+        box.appendChild(body);
+        svcHost.appendChild(box);
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  //  Galleria
+  // ---------------------------------------------------------------
+  if (GAL.length) {
+    $("galleryBlock").hidden = false;
+    if (CONFIG.galleryTitle) $("galleryTitleH").textContent = CONFIG.galleryTitle;
+    var g = $("gallery");
+    GAL.forEach(function (src) {
+      var b = el("button", "gphoto", '<img src="' + src + '" alt="" loading="lazy">');
+      b.type = "button";
+      b.addEventListener("click", function () { openLightbox(src); });
+      g.appendChild(b);
+    });
+  }
+  function openLightbox(src) {
+    var host = $("lightboxHost");
+    host.innerHTML = "";
+    var box = el("div", "lightbox");
+    var img = el("img", "", ""); img.src = src; img.alt = ""; box.appendChild(img);
+    var close = el("button", "", "&times;"); close.type = "button"; close.setAttribute("aria-label", "Chiudi");
+    close.addEventListener("click", function () { host.innerHTML = ""; });
+    box.appendChild(close);
+    box.addEventListener("click", function (e) { if (e.target === box) host.innerHTML = ""; });
+    host.appendChild(box);
+  }
+
+  // ---------------------------------------------------------------
+  //  Riquadro informativo facoltativo
+  // ---------------------------------------------------------------
+  if (CONFIG.leadInfo && CONFIG.leadInfo.enabled) {
+    $("infoBlockWrap").hidden = false;
+    $("infoTitle").textContent = CONFIG.leadInfo.title || "";
+    $("infoText").textContent = CONFIG.leadInfo.text || "";
+  }
+
+  // ---------------------------------------------------------------
+  //  Contatti, orari, social, vCard
+  // ---------------------------------------------------------------
+  $("siteBtn").href = CONFIG.siteUrl || "#"; $("siteBtn").textContent = CONFIG.siteButtonLabel || "Vai al sito";
+  var cr = $("crow");
+  function btn(txt, href) { var a = el("a", "btn ghost", esc(txt)); a.href = href; if (/^https?:/.test(href)) { a.target = "_blank"; a.rel = "noopener"; } cr.appendChild(a); return a; }
+  if (CONFIG.phone) btn("Chiama", "tel:" + CONFIG.phone);
+  if (CONFIG.email) btn("Scrivici", "mailto:" + CONFIG.email);
+  (CONFIG.socials || []).forEach(function (s) { if (s.url) btn(s.label, s.url); });
+  if (CONFIG.address) btn("Come arrivare", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((CONFIG.company || "") + ", " + CONFIG.address));
+  var vcf = ["BEGIN:VCARD", "VERSION:3.0", "FN:" + (CONFIG.company || ""), "ORG:" + (CONFIG.company || ""),
+    CONFIG.phone ? "TEL;TYPE=WORK,VOICE:" + CONFIG.phone : "", CONFIG.email ? "EMAIL;TYPE=WORK:" + CONFIG.email : "",
+    "URL:" + (CONFIG.siteUrl || ""), "END:VCARD"].filter(Boolean).join("\r\n");
+  var save = el("a", "btn", "Salva nei contatti"); save.href = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcf); save.download = (CONFIG.brandLine1 || "vetrina") + ".vcf"; save.style.gridColumn = "1 / -1"; cr.appendChild(save);
+  $("info").innerHTML = esc(CONFIG.company || "") + (CONFIG.address ? "<br>" + esc(CONFIG.address) : "") + (CONFIG.hours ? "<br>" + esc(CONFIG.hours) : "");
+
+  // ---------------------------------------------------------------
+  //  Pagina di categoria (solo modalità "A pagine per categoria"):
+  //  dalla piastrella si apre una pagina con il listino di quel
+  //  gruppo e le sue foto sotto, tornando indietro con il link in alto.
+  // ---------------------------------------------------------------
+  if (SVCMODE === "pages" && SVC.length) {
+    var PAGE_TITLE = document.title;
+    var HOME_HIDDEN = {
+      services: $("services").hidden,
+      galleryBlock: $("galleryBlock").hidden,
+      infoBlockWrap: $("infoBlockWrap").hidden,
+      contattiBlock: $("contattiBlock").hidden
+    };
+    function findGroupBySlug(id) {
+      var found = null;
+      SVC.forEach(function (g) { if (g.id === id) found = g; });
+      return found;
+    }
+    function showHome() {
+      $("catPage").hidden = true;
+      $("hero").hidden = false;
+      $("services").hidden = HOME_HIDDEN.services;
+      $("galleryBlock").hidden = HOME_HIDDEN.galleryBlock;
+      $("infoBlockWrap").hidden = HOME_HIDDEN.infoBlockWrap;
+      $("contattiBlock").hidden = HOME_HIDDEN.contattiBlock;
+      document.title = PAGE_TITLE;
+      window.scrollTo(0, 0);
+    }
+    function showCategoryPage(g) {
+      $("hero").hidden = true; $("services").hidden = true;
+      $("galleryBlock").hidden = true; $("infoBlockWrap").hidden = true; $("contattiBlock").hidden = true;
+      $("catPageTitle").textContent = g.title;
+      var body = $("catPageBody"); body.innerHTML = ""; body.appendChild(buildSvcBody(g));
+      var galHost = $("catPageGallery"); galHost.innerHTML = "";
+      if (g.photos && g.photos.length) galHost.appendChild(buildPhotoGrid(g.photos));
+      $("catPage").hidden = false;
+      document.title = g.title;
+      window.scrollTo(0, 0);
+    }
+    function route() {
+      var hash = (location.hash || "").replace("#", "");
+      var g = hash.indexOf("cat-") === 0 ? findGroupBySlug(hash.slice(4)) : null;
+      if (g) showCategoryPage(g); else showHome();
+    }
+    window.addEventListener("hashchange", route);
+    route();
+  }
+})();
+</script>
+</body>
+</html>
