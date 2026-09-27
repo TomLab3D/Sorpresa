@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111" id="themeColorMeta">
 <title>Vetrina</title>
 <style id="baseStyle">
   :root {
@@ -17,7 +18,7 @@
 
   .hero {
     background: var(--hero); color: var(--hero-ink); position: relative; overflow: hidden;
-    margin: 0 -1.2rem; padding: max(1.4rem, min(env(safe-area-inset-top), 2rem)) 1.4rem 1.7rem;
+    margin: 0 -1.2rem; padding: max(1.6rem, env(safe-area-inset-top)) 1.4rem 1.7rem;
     border-radius: 0 0 28px 28px;
   }
   .hero > * { position: relative; z-index: 1; }
@@ -422,6 +423,8 @@
   root.setProperty("--card", card);
   root.setProperty("--hero", hero);
   root.setProperty("--hero-ink", heroInk);
+  var themeMeta = document.getElementById("themeColorMeta");
+  if (themeMeta) themeMeta.setAttribute("content", hero);
   root.setProperty("--accent", accentOnPaper);
   root.setProperty("--accent-bright", accentOnHero);
 
