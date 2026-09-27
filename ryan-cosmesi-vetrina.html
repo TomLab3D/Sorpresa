@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vetrina</title>
+<style id="baseStyle">
+  :root {
+    --paper: #f7f6f3; --ink: #141414; --ink-soft: rgba(20,20,20,0.66); --card: #ffffff; --line: rgba(20,20,20,0.13);
+    --accent: #a9812f; --accent-bright: #d8b56a; --hero: #111111; --hero-ink: #f7f2e8;
+    --font: "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+  .app { max-width: 640px; margin: 0 auto; padding: 0 1.2rem max(2rem, env(safe-area-inset-bottom)); }
+
+  .hero {
+    background: var(--hero); color: var(--hero-ink); position: relative; overflow: hidden;
+    margin: 0 -1.2rem; padding: max(1.4rem, min(env(safe-area-inset-top), 2rem)) 1.4rem 1.7rem;
+    border-radius: 0 0 28px 28px;
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .hero.hero-photo { background-size: cover; background-position: center; }
+  .hero.hero-photo::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--hero) 30%, transparent) 0%, rgba(10,10,10,0.7) 100%);
+  }
+  .logo { font-weight: 800; font-size: clamp(2.5rem, 12.5vw, 3.7rem); line-height: 0.92; letter-spacing: -0.035em; }
+  .logo span { color: var(--accent-bright); }
+  .logo-img { display: block; max-height: 4.2rem; max-width: 78%; object-fit: contain; object-position: left center; }
+  .logo-bar { width: 3.4rem; height: 3px; margin-top: 1rem; background: var(--accent-bright); }
+  .tagline { margin-top: 0.9rem; font-size: 1rem; line-height: 1.45; color: color-mix(in srgb, var(--hero-ink) 78%, transparent); font-weight: 500; max-width: 36ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .chips span { font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-bright) 60%, transparent); color: var(--hero-ink); }
+
+  .tiles { display: grid; gap: 0.8rem; margin-top: 1.4rem; }
+  .tile {
+    appearance: none; cursor: pointer; font: inherit; color: inherit; text-align: left;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem;
+    padding: 1.1rem 1.15rem; border-radius: 20px; background: var(--card); border: 1.5px solid var(--line);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .tile:active { transform: scale(0.98); }
+  .tile:hover { border-color: var(--ink); }
+  .tile .ic { width: 3.2rem; height: 3.2rem; border-radius: 14px; background: var(--hero); color: var(--accent-bright); display: grid; place-items: center; font-size: 1.5rem; }
+  .tile h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .tile p { margin-top: 0.25rem; font-size: 0.92rem; color: var(--ink-soft); font-weight: 500; line-height: 1.3; }
+  .tile .arr { width: 1.4rem; height: 1.4rem; color: var(--accent); }
+
+  .lead { margin-top: 1.2rem; padding: 1.1rem 1.15rem; border-radius: 20px; background: var(--hero); color: var(--hero-ink); }
+  .lead b { display: block; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
+  .lead p { margin-top: 0.3rem; font-size: 0.92rem; line-height: 1.4; color: color-mix(in srgb, var(--hero-ink) 76%, transparent); }
+  .lead .btn { margin-top: 0.8rem; background: var(--accent-bright); border-color: var(--accent-bright); color: var(--hero); }
+
+  .back {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 0.95rem; color: var(--ink);
+    background: transparent; border: 1.5px solid var(--ink); border-radius: 999px; padding: 0.5rem 1rem; margin-top: 1.2rem;
+    display: inline-flex; align-items: center; gap: 0.4rem; -webkit-tap-highlight-color: transparent;
+  }
+  .back svg { width: 0.9rem; height: 0.9rem; }
+  .cat-title { margin-top: 1.1rem; font-size: clamp(2rem, 10vw, 3rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .cat-title::after { content: ""; display: block; width: 2.6rem; height: 3px; margin-top: 0.7rem; background: var(--accent); }
+  .cat-sub { margin-top: 0.7rem; color: var(--ink-soft); font-weight: 500; font-size: 1rem; }
+  .group { margin-top: 1.5rem; }
+  .group h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.55rem; }
+  .links { display: grid; gap: 0.5rem; }
+  .link {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.8rem; text-decoration: none; color: var(--ink);
+    padding: 0.9rem 1.1rem; border-radius: 16px; background: var(--card); border: 1.5px solid var(--line);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .link:active { transform: scale(0.98); }
+  .link:hover { border-color: var(--ink); }
+  .link b { display: block; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+  .link small { display: block; margin-top: 0.15rem; font-size: 0.83rem; font-weight: 500; color: var(--ink-soft); }
+  .link svg { width: 1.15rem; height: 1.15rem; color: var(--accent); }
+  .link.first { background: var(--hero); color: var(--hero-ink); border-color: var(--hero); }
+  .link.first small { color: color-mix(in srgb, var(--hero-ink) 72%, transparent); }
+  .link.first svg { color: var(--accent-bright); }
+
+  .form { margin-top: 1.3rem; display: grid; gap: 0.9rem; }
+  .form label { display: grid; gap: 0.35rem; font-size: 0.9rem; font-weight: 700; }
+  .form input {
+    font: inherit; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--card);
+    border: 1.5px solid var(--line); border-radius: 14px; padding: 0.85rem 0.95rem; width: 100%; -webkit-appearance: none; appearance: none;
+  }
+  .form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .form input.bad { border-color: #c0392b; }
+  .form fieldset { border: 0; display: grid; gap: 0.45rem; }
+  .form legend { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.1rem; }
+  .pick { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .pick button {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 0.92rem; color: var(--ink); background: transparent;
+    border: 1.5px solid var(--line); border-radius: 999px; padding: 0.5rem 0.95rem; -webkit-tap-highlight-color: transparent;
+  }
+  .pick button[aria-pressed="true"] { background: var(--hero); border-color: var(--hero); color: var(--accent-bright); }
+  .err { color: #c0392b; font-weight: 700; font-size: 0.92rem; }
+  .ok { font-weight: 700; font-size: 0.95rem; padding: 0.8rem 1rem; border-radius: 14px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .note { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.4; }
+
+  .site { margin-top: 1.5rem; display: flex; }
+  .btn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 800; font-size: 1.02rem; text-decoration: none; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;
+    padding: 0.95rem 1.4rem; border-radius: 999px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--ink); }
+
+  .contacts { margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+  .contacts h3 { font-size: 0.82rem; font-weight: 800; color: var(--ink-soft); margin-bottom: 0.7rem; letter-spacing: 0.02em; }
+  .crow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .crow .btn { padding: 0.75rem 0.6rem; font-size: 0.95rem; }
+  .info { margin-top: 1rem; font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); font-weight: 500; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+
+
+  /* =======================================================================
+     Dentro lo stile "Minimale": alcuni tratti restano modificabili
+     (attaccata/staccata, angoli, ombra, icone, etichette), sia nel
+     Minimale "originale" sia in quello che prima era "Naturale".
+     ======================================================================= */
+  [data-hero-staccata] .hero { margin: 0.6rem -1.2rem 0; border-radius: 28px; }
+  [data-radius-soft] .tile, [data-radius-soft] .link, [data-radius-soft] .lead { border-radius: 28px; }
+  [data-shadow-soft] .tile, [data-shadow-soft] .link { border: 0; box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+  [data-shadow-soft] .lead { border: 0; box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
+  [data-icons-circle] .tile .ic { border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); color: var(--accent); }
+  [data-chips-filled] .chips span { border: 0; background: color-mix(in srgb, var(--accent-bright) 22%, transparent); }
+
+  /* =======================================================================
+     STILE "editoriale": niente riquadri pieni, righe sottili, maiuscoletto.
+     ======================================================================= */
+  [data-style="editoriale"] .hero {
+    background: transparent; color: var(--ink); border-radius: 0;
+    padding-left: 0; padding-right: 0; border-bottom: 2px solid var(--ink);
+  }
+  [data-style="editoriale"] .tagline, [data-style="editoriale"] .chips span { color: var(--ink-soft); }
+  [data-style="editoriale"] .chips span { border-radius: 0; border: 0; border-bottom: 1.5px solid var(--accent); padding: 0.2rem 0; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; }
+  [data-style="editoriale"] .logo-bar { display: none; }
+  [data-style="editoriale"] .logo, [data-style="editoriale"] .logo-img { }
+  [data-style="editoriale"] .tiles { gap: 0; }
+  [data-style="editoriale"] .tile {
+    border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; padding: 1.3rem 0.1rem;
+  }
+  [data-style="editoriale"] .tiles .tile:last-child { border-bottom: 1px solid var(--line); }
+  [data-style="editoriale"] .tiles { counter-reset: catnum; }
+  [data-style="editoriale"] .tile { counter-increment: catnum; grid-template-columns: 1fr auto; align-items: baseline; }
+  [data-style="editoriale"] .tile .ic { display: none; }
+  [data-style="editoriale"] .tile h2 { font-weight: 800; font-size: 1.7rem; letter-spacing: -0.01em; }
+  [data-style="editoriale"] .tile h2::before { content: counter(catnum, decimal-leading-zero) "\2003"; color: var(--accent); font-size: 1rem; font-weight: 800; vertical-align: middle; }
+  [data-style="editoriale"] .tile p { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; }
+  [data-style="editoriale"] .tile .arr { color: var(--accent); width: 1.1rem; height: 1.1rem; }
+  [data-style="editoriale"] .logo { font-size: clamp(3rem, 15vw, 4.6rem); }
+  [data-style="editoriale"] .tagline { font-size: 1.1rem; max-width: 30ch; }
+  [data-style="editoriale"] .lead { border-radius: 0; background: transparent; color: var(--ink); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); padding: 1.3rem 0; }
+  [data-style="editoriale"] .lead p { color: var(--ink-soft); }
+  [data-style="editoriale"] .lead .btn { background: var(--ink); border-color: var(--ink); color: var(--paper); border-radius: 0; }
+  [data-style="editoriale"] .cat-title { text-transform: uppercase; letter-spacing: 0.02em; }
+  [data-style="editoriale"] .cat-title::after { display: none; }
+  [data-style="editoriale"] .group h3 { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; font-weight: 800; }
+  [data-style="editoriale"] .link { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 1rem 0.1rem; }
+  [data-style="editoriale"] .link.first { background: transparent; color: var(--ink); border-bottom: 2px solid var(--accent); }
+  [data-style="editoriale"] .link.first small { color: var(--ink-soft); }
+  [data-style="editoriale"] .link.first svg { color: var(--accent); }
+  [data-style="editoriale"] .back { border-radius: 0; }
+  [data-style="editoriale"] .btn { border-radius: 0; }
+  [data-style="editoriale"] .tile:active, [data-style="editoriale"] .link:active { transform: none; opacity: 0.6; }
+
+  /* =======================================================================
+     STILE "elegante": centrato, righe sottili dorate, molto respiro.
+     ======================================================================= */
+  [data-style="elegante"] .hero {
+    background: transparent; color: var(--ink); border-radius: 0; text-align: center;
+    padding-left: 0.4rem; padding-right: 0.4rem; padding-bottom: 1.1rem;
+  }
+  [data-style="elegante"] .logo { font-weight: 500; letter-spacing: 0.02em; }
+  [data-style="elegante"] .logo span { color: var(--accent); }
+  [data-style="elegante"] .logo-img { margin: 0 auto; }
+  [data-style="elegante"] .logo-bar { margin-left: auto; margin-right: auto; background: var(--accent); width: 2.2rem; }
+  [data-style="elegante"] .tagline { margin-left: auto; margin-right: auto; color: var(--ink-soft); }
+  [data-style="elegante"] .chips { justify-content: center; }
+  [data-style="elegante"] .chips span { border-radius: 0; border: 0; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; padding: 0; }
+  [data-style="elegante"] .chips span:not(:last-child)::after { content: "·"; margin-left: 0.6rem; color: var(--accent); }
+  [data-style="elegante"] .tile {
+    border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; background: transparent;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; padding: 1.6rem 0.5rem;
+  }
+  [data-style="elegante"] .tiles { gap: 0; margin-top: 2rem; }
+  [data-style="elegante"] .tiles .tile + .tile { border-top: 0; }
+  [data-style="elegante"] .tile .ic { background: transparent; border: 0; color: var(--accent); font-size: 0.6rem; width: auto; height: auto; }
+  [data-style="elegante"] .tile h2 { font-weight: 500; font-size: 1.5rem; letter-spacing: 0.01em; }
+  [data-style="elegante"] .tile p { color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; margin-top: 0.3rem; }
+  [data-style="elegante"] .logo { font-size: clamp(2.2rem, 9vw, 2.8rem); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 400; }
+  [data-style="elegante"] .tagline { font-style: italic; font-size: 0.98rem; }
+  [data-style="elegante"] .tile .arr { display: none; }
+  [data-style="elegante"] .lead { text-align: center; border-radius: 0; background: transparent; color: var(--ink); border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); padding: 1.6rem 0.5rem; }
+  [data-style="elegante"] .lead p { color: var(--ink-soft); }
+  [data-style="elegante"] .lead .btn { background: transparent; color: var(--ink); border: 1px solid var(--ink); border-radius: 999px; max-width: 16rem; margin: 0.9rem auto 0; }
+  [data-style="elegante"] .cat-title { text-align: center; font-weight: 500; }
+  [data-style="elegante"] .cat-title::after { margin-left: auto; margin-right: auto; background: var(--accent); }
+  [data-style="elegante"] .cat-sub { text-align: center; }
+  [data-style="elegante"] .group h3 { text-align: center; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); }
+  [data-style="elegante"] .link { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; text-align: center; grid-template-columns: 1fr; padding: 1rem 0.5rem; }
+  [data-style="elegante"] .link svg { display: none; }
+  [data-style="elegante"] .link.first { background: transparent; color: var(--ink); border-bottom: 1px solid var(--accent); }
+  [data-style="elegante"] .back { border-radius: 999px; margin-left: auto; margin-right: auto; display: flex; width: fit-content; }
+  [data-style="elegante"] .contacts { text-align: center; }
+  [data-style="elegante"] .crow { max-width: 24rem; margin: 0 auto; }
+
+
+
+  /* =======================================================================
+     STILE "audace": blocchi pieni, bordi spessi, ombra netta, poster.
+     ======================================================================= */
+  [data-style="audace"] { }
+  [data-style="audace"] .hero { border-radius: 0; border: 3px solid var(--ink); margin: 0.6rem -0.6rem 0; box-shadow: 7px 7px 0 var(--ink); }
+  [data-style="audace"] .logo { text-transform: uppercase; font-weight: 800; letter-spacing: -0.02em; }
+  [data-style="audace"] .logo-bar { height: 5px; background: var(--accent-bright); }
+  [data-style="audace"] .chips span { border-radius: 0; border: 2px solid var(--accent-bright); font-weight: 800; text-transform: uppercase; }
+  [data-style="audace"] .tiles { gap: 1rem; }
+  [data-style="audace"] .tile {
+    border: 3px solid var(--ink); border-radius: 0; background: var(--card); box-shadow: 6px 6px 0 var(--ink);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  [data-style="audace"] .tile:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--ink); }
+  [data-style="audace"] .tile .ic { border-radius: 0; border: 2px solid var(--ink); background: var(--accent-bright); color: var(--ink); }
+  [data-style="audace"] .tile h2 { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .tile .arr { color: var(--ink); }
+  [data-style="audace"] .lead { border-radius: 0; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+  [data-style="audace"] .lead .btn { border-radius: 0; border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+  [data-style="audace"] .cat-title { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .cat-title::after { height: 5px; background: var(--accent); }
+  [data-style="audace"] .group h3 { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .link { border: 2.5px solid var(--ink); border-radius: 0; box-shadow: 4px 4px 0 var(--ink); }
+  [data-style="audace"] .link:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  [data-style="audace"] .link.first { background: var(--accent-bright); color: var(--ink); border-color: var(--ink); }
+  [data-style="audace"] .link.first svg { color: var(--ink); }
+  [data-style="audace"] .btn { border-radius: 0; border-width: 2.5px; }
+  [data-style="audace"] .back { border-radius: 0; border-width: 2.5px; }
+
+  /* =======================================================================
+     STILE "audace": blocchi pieni, bordi spessi, ombra netta, poster.
+     ======================================================================= */
+  [data-style="audace"] { }
+  [data-style="audace"] .hero { border-radius: 0; border: 3px solid var(--ink); margin: 0.6rem -0.6rem 0; box-shadow: 7px 7px 0 var(--ink); }
+  [data-style="audace"] .logo { text-transform: uppercase; font-weight: 800; letter-spacing: -0.02em; }
+  [data-style="audace"] .logo-bar { height: 5px; background: var(--accent-bright); }
+  [data-style="audace"] .chips span { border-radius: 0; border: 2px solid var(--accent-bright); font-weight: 800; text-transform: uppercase; }
+  [data-style="audace"] .tiles { gap: 1rem; }
+  [data-style="audace"] .tile {
+    border: 3px solid var(--ink); border-radius: 0; background: var(--card); box-shadow: 6px 6px 0 var(--ink);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  [data-style="audace"] .tile:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--ink); }
+  [data-style="audace"] .tile .ic { border-radius: 0; border: 2px solid var(--ink); background: var(--accent-bright); color: var(--ink); }
+  [data-style="audace"] .tile h2 { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .tile .arr { color: var(--ink); }
+  [data-style="audace"] .lead { border-radius: 0; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+  [data-style="audace"] .lead .btn { border-radius: 0; border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+  [data-style="audace"] .cat-title { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .cat-title::after { height: 5px; background: var(--accent); }
+  [data-style="audace"] .group h3 { text-transform: uppercase; font-weight: 800; }
+  [data-style="audace"] .link { border: 2.5px solid var(--ink); border-radius: 0; box-shadow: 4px 4px 0 var(--ink); }
+  [data-style="audace"] .link:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  [data-style="audace"] .link.first { background: var(--accent-bright); color: var(--ink); border-color: var(--ink); }
+  [data-style="audace"] .link.first svg { color: var(--ink); }
+  [data-style="audace"] .btn { border-radius: 0; border-width: 2.5px; }
+  [data-style="audace"] .back { border-radius: 0; border-width: 2.5px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="logo" id="logo" hidden></div>
+    <img class="logo-img" id="logoImg" hidden alt="">
+    <div class="logo-bar"></div>
+    <p class="tagline" id="tagline"></p>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <main id="home">
+    <div class="tiles" id="tiles" aria-label="Categorie"></div>
+    <section class="lead" id="lead" hidden>
+      <b id="leadTitle"></b>
+      <p id="leadText"></p>
+      <a class="btn" id="leadBtn" href="#lead-form">-</a>
+    </section>
+  </main>
+
+  <main id="cat" hidden>
+    <button class="back" id="back" type="button"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M8 1.5 L3 6 L8 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tutte le categorie</button>
+    <h1 class="cat-title" id="catTitle"></h1>
+    <p class="cat-sub" id="catSub"></p>
+    <div id="catBody"></div>
+  </main>
+
+  <main id="lead-form" hidden>
+    <button class="back" id="back2" type="button"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M8 1.5 L3 6 L8 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tutte le categorie</button>
+    <h1 class="cat-title" id="lfTitle"></h1>
+    <p class="cat-sub" id="lfIntro"></p>
+    <form class="form" id="lform" novalidate>
+      <fieldset id="pickField" hidden><legend id="pickLabel"></legend><div class="pick" id="pickRow"></div></fieldset>
+      <label id="lNomeWrap">Nome<input id="fNome" autocomplete="name" required></label>
+      <label id="lAttWrap" hidden>Nome dell'attività<input id="fAtt" autocomplete="organization"></label>
+      <label id="lIvaWrap" hidden>Partita IVA<input id="fIva" inputmode="numeric" placeholder="11 cifre" maxlength="16" autocomplete="off"></label>
+      <label id="lCittaWrap">Città<input id="fCitta" autocomplete="address-level2"></label>
+      <label id="lTelWrap">Telefono<input id="fTel" type="tel" autocomplete="tel"></label>
+      <p class="err" id="fErr" role="alert" hidden></p>
+      <p class="ok" id="fOk" hidden></p>
+      <button class="btn" id="fSend" type="submit">Invia</button>
+      <button class="btn ghost" id="fMail" type="button" hidden>Invia con l'app di posta</button>
+      <button class="btn ghost" id="fCopy" type="button">Copia il messaggio</button>
+      <p class="note" id="fNote"></p>
+    </form>
+  </main>
+
+  <div class="site"><a class="btn" id="siteBtn" target="_blank" rel="noopener">-</a></div>
+
+  <section class="contacts" aria-label="Contatti">
+    <h3>Contatti</h3>
+    <div class="crow" id="crow"></div>
+    <p class="info" id="info"></p>
+  </section>
+</div>
+
+<script type="text/plain" id="cfgData">/*__CFG_START__*/var CONFIG = {"logo":"","coverPhoto":"","brandLine1":"Ryan","brandLine2":"Cosmesi","tagline":"Fornitura all'ingrosso per parrucchieri ed estetiste.","chips":["Dal 2006","Ingrosso"],"siteUrl":"https://esempio.it","siteButtonLabel":"Vai al sito esempio.it","favicon":"💇","colors":{"paper":"#f7f6f3","hero":"#111111","accent":"#a9812f"},"style":"minimale","styleOptions":{"heroDetached":false,"roundSoft":false,"shadow":false,"iconsCircle":false,"chipsFilled":false},"font":{"family":"Bricolage Grotesque","href":"https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap"},"categories":[{"id":"categoria-1","icon":"★","title":"Categoria 1","blurb":"Una riga che la descrive","sub":"Descrizione più lunga, in cima alla pagina della categoria.","groups":[{"name":"Gruppo di link","links":[{"t":"Nome del link","s":"","u":"https://esempio.it","first":true}]}]}],"lead":{"enabled":true,"cardTitle":"Vuoi essere ricontattato?","cardText":"Lascia i tuoi dati: ti rispondiamo il prima possibile.","buttonLabel":"Contattaci","pageTitle":"Contattaci","pageIntro":"Compila i tuoi dati: ti rispondiamo appena possibile.","pickLabel":"Di cosa hai bisogno?","pickOptions":[],"askCompany":false,"askVat":false,"askCity":true,"askPhone":true,"messageIntro":"Buongiorno, vorrei essere ricontattato.","messageSignature":"Richiesta inviata dalla vostra pagina."},"company":"Nome Azienda S.r.l.","address":"","hours":"","email":"","phone":"","whatsapp":"","socials":[{"label":"Instagram","url":""},{"label":"Facebook","url":""},{"label":"TikTok","url":""},{"label":"YouTube","url":""},{"label":"LinkedIn","url":""}]};/*__CFG_END__*/</script>
+<script>
+(function () {
+  /* ========================================================================
+     Tutto arriva da CONFIG (iniettato sopra come JSON dallo strumento).
+     Qui sotto: solo il motore che disegna la pagina. Non serve toccarlo.
+     ======================================================================== */
+  var CONFIG = (function () {
+    var s = document.getElementById("cfgData").textContent;
+    var m = s.match(/var CONFIG = ([\s\S]*);/);
+    return m ? JSON.parse(m[1]) : {};
+  })();
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---------------------------------------------------------------
+  //  Colori: da pochi colori scelti, calcolo tutto il resto in modo
+  //  che il testo resti sempre leggibile, qualunque colore si scelga.
+  // ---------------------------------------------------------------
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function hexToRgb(hex) {
+    hex = (hex || "#888888").replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgbToHex(r, g, b) {
+    function h(v) { var x = Math.round(clamp01(v / 255) * 255).toString(16); return x.length === 1 ? "0" + x : x; }
+    return "#" + h(r) + h(g) + h(b);
+  }
+  function luminance(hex) {
+    var rgb = hexToRgb(hex).map(function (v) {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  }
+  function isDark(hex) { return luminance(hex) < 0.5; }
+  function mix(hexA, hexB, t) {
+    var a = hexToRgb(hexA), b = hexToRgb(hexB);
+    return rgbToHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
+  }
+  function hexToHsl(hex) {
+    var rgb = hexToRgb(hex).map(function (v) { return v / 255; }), r = rgb[0], g = rgb[1], b = rgb[2];
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      var d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0); else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return [h * 360, s, l];
+  }
+  function hslToHex(h, s, l) {
+    h /= 360;
+    function hue2rgb(p, q, t) { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
+    var r, g, b;
+    if (s === 0) { r = g = b = l; } else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return rgbToHex(r * 255, g * 255, b * 255);
+  }
+  function accentFor(bgHex, accentHex) {
+    var hsl = hexToHsl(accentHex);
+    // Se il colore scelto è già bianco, nero o un grigio (poca saturazione),
+    // è una scelta voluta: va rispettata così com'è, non "corretta" verso
+    // una tinta accesa. Forzare una saturazione minima trasformerebbe un
+    // bianco in un colore acceso (es. rosa) che l'utente non ha scelto.
+    if (hsl[1] < 0.08) return isDark(bgHex) ? LIGHT_INK : DARK_INK;
+    var sat = Math.max(0.35, hsl[1]);
+    return hslToHex(hsl[0], sat, isDark(bgHex) ? 0.68 : 0.4);
+  }
+
+  var LIGHT_INK = "#f5f2ea", DARK_INK = "#141414";
+  var col = CONFIG.colors || {};
+  var paper = col.paper || "#f7f6f3";
+  var hero = col.hero || "#111111";
+  var accentHex = col.accent || "#a9812f";
+  // I quattro colori del testo hanno un valore calcolato automaticamente
+  // (sempre leggibile su qualunque sfondo) ma possono essere sostituiti
+  // a mano dallo strumento: se CONFIG li specifica, vincono loro.
+  var ink = col.ink || (isDark(paper) ? LIGHT_INK : DARK_INK);
+  var heroInk = col.heroInk || (isDark(hero) ? LIGHT_INK : DARK_INK);
+  var card = isDark(paper) ? mix(paper, "#ffffff", 0.12) : mix(paper, "#ffffff", 0.85);
+  var accentOnPaper = col.accentOnPaper || accentFor(paper, accentHex);
+  var accentOnHero = col.accentOnHero || accentFor(hero, accentHex);
+  var root = document.documentElement.style;
+  root.setProperty("--paper", paper);
+  root.setProperty("--ink", ink);
+  root.setProperty("--card", card);
+  root.setProperty("--hero", hero);
+  root.setProperty("--hero-ink", heroInk);
+  root.setProperty("--accent", accentOnPaper);
+  root.setProperty("--accent-bright", accentOnHero);
+
+  // ---------------------------------------------------------------
+  //  Carattere: carico il font scelto (Google Fonts) e lo applico.
+  // ---------------------------------------------------------------
+  if (CONFIG.font && CONFIG.font.href) {
+    ["https://fonts.googleapis.com", "https://fonts.gstatic.com"].forEach(function (u) {
+      var l = document.createElement("link"); l.rel = "preconnect"; l.href = u; if (u.indexOf("gstatic") >= 0) l.crossOrigin = "anonymous";
+      document.head.appendChild(l);
+    });
+    var fl = document.createElement("link"); fl.rel = "stylesheet"; fl.href = CONFIG.font.href;
+    document.head.appendChild(fl);
+  }
+  root.setProperty("--font", (CONFIG.font && CONFIG.font.family ? '"' + CONFIG.font.family + '", ' : "") + '"Helvetica Neue", Arial, sans-serif');
+
+  // ---------------------------------------------------------------
+  //  Favicon: un'emoji come icona della pagina.
+  // ---------------------------------------------------------------
+  if (CONFIG.favicon) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">' + CONFIG.favicon + '</text></svg>';
+    var lf = document.createElement("link"); lf.rel = "icon"; lf.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    document.head.appendChild(lf);
+  }
+
+  // ---------------------------------------------------------------
+  //  Logo: immagine, se c'è, altrimenti il nome scritto.
+  // ---------------------------------------------------------------
+  document.body.setAttribute("data-style", CONFIG.style || "minimale");
+  (function () {
+    var o = CONFIG.styleOptions || {};
+    var b = document.body;
+    if (o.heroDetached) b.setAttribute("data-hero-staccata", "");
+    if (o.roundSoft) b.setAttribute("data-radius-soft", "");
+    if (o.shadow) b.setAttribute("data-shadow-soft", "");
+    if (o.iconsCircle) b.setAttribute("data-icons-circle", "");
+    if (o.chipsFilled) b.setAttribute("data-chips-filled", "");
+  })();
+  // Foto di sfondo nella testata: solo per gli stili con un riquadro a tinta
+  // (Minimale, Audace). Editoriale ed Elegante restano senza, per coerenza
+  // con quello stile (niente blocchi di colore pieno).
+  if (CONFIG.coverPhoto && (CONFIG.style === "audace" || !CONFIG.style || CONFIG.style === "minimale")) {
+    var heroEl = document.querySelector(".hero");
+    heroEl.classList.add("hero-photo");
+    heroEl.style.backgroundImage = "url('" + CONFIG.coverPhoto + "')";
+  }
+  document.title = ((CONFIG.brandLine1 || "") + " " + (CONFIG.brandLine2 || "")).trim() || "Vetrina";
+  if (CONFIG.logo) {
+    $("logoImg").src = CONFIG.logo; $("logoImg").alt = CONFIG.brandLine1 || "";
+    $("logoImg").hidden = false;
+  } else {
+    $("logo").innerHTML = esc(CONFIG.brandLine1 || "") + (CONFIG.brandLine2 ? "<br><span>" + esc(CONFIG.brandLine2) + "</span>" : "");
+    $("logo").hidden = false;
+  }
+  $("tagline").textContent = CONFIG.tagline || "";
+  (CONFIG.chips || []).forEach(function (p) { $("chips").appendChild(el("span", "", esc(p))); });
+  $("siteBtn").href = CONFIG.siteUrl || "#"; $("siteBtn").textContent = CONFIG.siteButtonLabel || "Vai al sito";
+
+  var ICON_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  var ICON_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 16L16 8"/><path d="M9 8h7v7"/></svg>';
+
+  var CATS = CONFIG.categories || [];
+  CATS.forEach(function (c) {
+    if (c.direct) {
+      var a = el("a", "tile", '<span class="ic">' + esc(c.icon || "•") + '</span><span><h2>' + esc(c.title) + '</h2><p>' + esc(c.blurb) + '</p></span><span class="arr">' + ICON_OUT + '</span>');
+      a.href = c.url; a.target = "_blank"; a.rel = "noopener";
+      $("tiles").appendChild(a);
+      return;
+    }
+    var b = el("button", "tile", '<span class="ic">' + esc(c.icon || "•") + '</span><span><h2>' + esc(c.title) + '</h2><p>' + esc(c.blurb) + '</p></span><span class="arr">' + ICON_ARR + '</span>');
+    b.type = "button"; b.setAttribute("data-cat", c.id);
+    $("tiles").appendChild(b);
+  });
+  $("tiles").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button") : null; if (b) location.hash = b.getAttribute("data-cat");
+  });
+  $("back").addEventListener("click", function () { location.hash = ""; });
+  $("back2").addEventListener("click", function () { location.hash = ""; });
+
+  var LEAD = CONFIG.lead || { enabled: false };
+  if (LEAD.enabled) {
+    $("lead").hidden = false;
+    $("leadTitle").textContent = LEAD.cardTitle || "";
+    $("leadText").textContent = LEAD.cardText || "";
+    $("leadBtn").textContent = LEAD.buttonLabel || "Contattaci";
+    $("lfTitle").textContent = LEAD.pageTitle || "";
+    $("lfIntro").textContent = LEAD.pageIntro || "";
+    $("lAttWrap").hidden = !LEAD.askCompany;
+    $("lIvaWrap").hidden = !LEAD.askVat;
+    $("lCittaWrap").hidden = !LEAD.askCity;
+    $("lTelWrap").hidden = !LEAD.askPhone;
+    if ((LEAD.pickOptions || []).length) {
+      $("pickField").hidden = false; $("pickLabel").textContent = LEAD.pickLabel || "";
+      var scelta = "";
+      LEAD.pickOptions.forEach(function (n) {
+        var b = el("button", "", esc(n)); b.type = "button"; b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function () {
+          scelta = scelta === n ? "" : n;
+          var bs = $("pickRow").querySelectorAll("button");
+          for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", bs[i].textContent === scelta ? "true" : "false");
+        });
+        $("pickRow").appendChild(b);
+      });
+      window.__scelta = function () { return scelta; };
+    } else { window.__scelta = function () { return ""; }; }
+  }
+
+  function ivaDigits(v) { return String(v).replace(/\s+/g, "").replace(/^IT/i, ""); }
+  function ivaOk(v) {
+    var d = ivaDigits(v); if (!/^\d{11}$/.test(d)) return false;
+    var s = 0; for (var i = 0; i < 11; i++) { var n = +d.charAt(i); if (i % 2 === 1) { n *= 2; if (n > 9) n -= 9; } s += n; }
+    return s % 10 === 0;
+  }
+  var viaWa = !!(CONFIG.whatsapp);
+  if (LEAD.enabled) {
+    if (!viaWa) {
+      $("fSend").textContent = "Invia con Gmail";
+      $("fMail").hidden = false;
+      $("fNote").textContent = "Si apre Gmail con il messaggio già scritto: lo invii tu. Se non usi Gmail, scegli «Invia con l'app di posta» oppure copia il messaggio. Questa pagina non salva i tuoi dati.";
+    } else {
+      $("fNote").textContent = "Si apre WhatsApp con il messaggio già scritto: lo invii tu. Questa pagina non salva i tuoi dati.";
+    }
+  }
+  function val(id) { return $(id).value.trim(); }
+  function message() {
+    var rows = [LEAD.messageIntro || "", ""];
+    if (window.__scelta && window.__scelta()) rows.push("Richiesta: " + window.__scelta());
+    if (LEAD.askCompany) rows.push("Attività: " + val("fAtt"));
+    if (LEAD.askVat) rows.push("Partita IVA: " + ivaDigits(val("fIva")));
+    rows.push("Nome: " + val("fNome"));
+    if (LEAD.askCity && val("fCitta")) rows.push("Città: " + val("fCitta"));
+    if (LEAD.askPhone && val("fTel")) rows.push("Telefono: " + val("fTel"));
+    rows.push(""); rows.push(LEAD.messageSignature || "");
+    return rows.join("\n");
+  }
+  function check() {
+    var err = "";
+    var nomeOk = !!val("fNome"); $("fNome").classList.toggle("bad", !nomeOk);
+    var attOk = !LEAD.askCompany || !!val("fAtt"); if (LEAD.askCompany) $("fAtt").classList.toggle("bad", !attOk);
+    var ivaOkVal = !LEAD.askVat || ivaOk(val("fIva")); if (LEAD.askVat) $("fIva").classList.toggle("bad", !ivaOkVal);
+    if (!nomeOk || !attOk) err = "Compila i campi obbligatori.";
+    else if (!ivaOkVal) err = "Controlla la partita IVA: servono 11 cifre valide.";
+    $("fErr").hidden = !err; $("fErr").textContent = err; $("fOk").hidden = true;
+    return !err;
+  }
+  if (LEAD.enabled) {
+    $("lform").addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!check()) return;
+      var msg = message();
+      if (viaWa) {
+        var url = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(msg);
+        var w = window.open(url, "_blank"); if (!w) window.location.href = url;
+        $("fOk").textContent = "Si è aperto WhatsApp con il messaggio pronto: premi Invia per completare la richiesta."; $("fOk").hidden = false;
+      } else {
+        var g = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(CONFIG.email || "") + "&su=" + encodeURIComponent(LEAD.pageTitle || "") + "&body=" + encodeURIComponent(msg);
+        var w2 = window.open(g, "_blank"); if (!w2) window.location.href = g;
+        $("fOk").textContent = "Si è aperto Gmail con il messaggio pronto: premi Invia per completare la richiesta."; $("fOk").hidden = false;
+      }
+    });
+    $("fMail").addEventListener("click", function () {
+      if (!check()) return;
+      window.location.href = "mailto:" + (CONFIG.email || "") + "?subject=" + encodeURIComponent(LEAD.pageTitle || "") + "&body=" + encodeURIComponent(message());
+      $("fOk").textContent = "Se non si apre la posta, tocca «Copia il messaggio» e incollalo dove preferisci."; $("fOk").hidden = false;
+    });
+    $("fCopy").addEventListener("click", function () {
+      if (!check()) return;
+      var msg = message();
+      function done() { $("fOk").textContent = "Messaggio copiato: incollalo in WhatsApp o nella mail."; $("fOk").hidden = false; }
+      try { navigator.clipboard.writeText(msg).then(done, done); } catch (er) { done(); }
+    });
+  }
+
+  function show(id) {
+    var c = null; CATS.forEach(function (x) { if (x.id === id) c = x; });
+    var isLead = id === "lead-form" && LEAD.enabled;
+    $("lead-form").hidden = !isLead;
+    if (isLead) { $("home").hidden = true; $("cat").hidden = true; document.title = LEAD.pageTitle || document.title; window.scrollTo(0, 0); return; }
+    if (!c) { $("home").hidden = false; $("cat").hidden = true; document.title = ((CONFIG.brandLine1 || "") + " " + (CONFIG.brandLine2 || "")).trim(); window.scrollTo(0, 0); return; }
+    $("home").hidden = true; $("cat").hidden = false;
+    $("catTitle").textContent = c.title; $("catSub").textContent = c.sub; document.title = c.title;
+    var body = $("catBody"); body.innerHTML = "";
+    (c.groups || []).forEach(function (g) {
+      var box = el("div", "group", "<h3>" + esc(g.name) + "</h3>"), list = el("div", "links");
+      (g.links || []).forEach(function (l) {
+        var a = el("a", "link" + (l.first ? " first" : ""), "<span><b>" + esc(l.t) + "</b>" + (l.s ? "<small>" + esc(l.s) + "</small>" : "") + "</span>" + ICON_OUT);
+        a.href = l.u; a.target = "_blank"; a.rel = "noopener"; list.appendChild(a);
+      });
+      box.appendChild(list); body.appendChild(box);
+    });
+    window.scrollTo(0, 0);
+  }
+  function route() { show((location.hash || "").replace("#", "")); }
+  window.addEventListener("hashchange", route);
+
+  var cr = $("crow");
+  function btn(txt, href) { var a = el("a", "btn ghost", esc(txt)); a.href = href; if (/^https?:/.test(href)) { a.target = "_blank"; a.rel = "noopener"; } cr.appendChild(a); return a; }
+  if (CONFIG.phone) btn("Chiama", "tel:" + CONFIG.phone);
+  if (CONFIG.email) btn("Scrivici", "mailto:" + CONFIG.email);
+  (CONFIG.socials || []).forEach(function (s) { if (s.url) btn(s.label, s.url); });
+  if (CONFIG.address) btn("Come arrivare", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((CONFIG.company || "") + ", " + CONFIG.address));
+  var vcf = ["BEGIN:VCARD", "VERSION:3.0", "FN:" + (CONFIG.company || ""), "ORG:" + (CONFIG.company || ""),
+    CONFIG.phone ? "TEL;TYPE=WORK,VOICE:" + CONFIG.phone : "", CONFIG.email ? "EMAIL;TYPE=WORK:" + CONFIG.email : "",
+    "URL:" + (CONFIG.siteUrl || ""), "END:VCARD"].filter(Boolean).join("\r\n");
+  var save = el("a", "btn", "Salva nei contatti"); save.href = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcf); save.download = (CONFIG.brandLine1 || "vetrina") + ".vcf"; save.style.gridColumn = "1 / -1"; cr.appendChild(save);
+  $("info").innerHTML = esc(CONFIG.company || "") + (CONFIG.address ? "<br>" + esc(CONFIG.address) : "") + (CONFIG.hours ? "<br>" + esc(CONFIG.hours) : "");
+
+  route();
+})();
+</script>
+</body>
+</html>
